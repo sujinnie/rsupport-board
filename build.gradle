@@ -32,6 +32,9 @@ dependencies {
 	annotationProcessor 'org.projectlombok:lombok'
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+	testImplementation 'com.h2database:h2'                     // H2
+	testImplementation 'org.testcontainers:junit-jupiter'      // Testcontainers JUnit5
+	testImplementation 'org.testcontainers:mysql'              // MySQL 컨테이너
 }
 
 tasks.named('test') {
