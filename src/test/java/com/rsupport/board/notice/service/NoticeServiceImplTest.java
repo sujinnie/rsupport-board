@@ -27,6 +27,9 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
+/**
+ * 서비스 단위테스트
+ */
 @ExtendWith(MockitoExtension.class)
 class NoticeServiceImplTest {
     @Mock
