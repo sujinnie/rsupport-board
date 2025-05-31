@@ -29,7 +29,7 @@ public class Attachment {
     @Column(name = "filename", nullable = false)
     private String filename;
 
-    @Column(name = "url", nullable = false)
+    @Column(name = "url", length = 2048, nullable = false)
     private String url;
 
     @CreatedDate
@@ -37,9 +37,11 @@ public class Attachment {
     private LocalDateTime uploadedAt;
 
     @Builder
-    public Attachment(String filename, String url) {
+    public Attachment(Long id, String filename, String url, LocalDateTime uploadedAt) {
+        this.id = id;
         this.filename = filename;
         this.url = url;
+        this.uploadedAt = uploadedAt;
     }
 
     void setNotice(Notice notice) {

@@ -63,6 +63,13 @@ public class Notice extends BaseTimeEntity {
     }
 
     /**
+     * 단위테스트용..
+     */
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    /**
      * 첨부파일 추가
      *
      * @param attachment
