@@ -1,4 +1,4 @@
-package com.rsupport.board.member.domain;
+package com.rsupport.board.member.domain.entity;
 
 import com.rsupport.board.common.entity.BaseTimeEntity;
 

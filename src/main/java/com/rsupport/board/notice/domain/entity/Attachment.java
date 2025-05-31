@@ -1,4 +1,4 @@
-package com.rsupport.board.notice.domain;
+package com.rsupport.board.notice.domain.entity;
 
 import jakarta.persistence.*;
 import lombok.*;

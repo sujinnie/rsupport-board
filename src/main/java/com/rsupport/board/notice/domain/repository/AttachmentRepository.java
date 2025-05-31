@@ -1,6 +1,6 @@
-package com.rsupport.board.notice.repository;
+package com.rsupport.board.notice.domain.repository;
 
-import com.rsupport.board.notice.domain.Attachment;
+import com.rsupport.board.notice.domain.entity.Attachment;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 

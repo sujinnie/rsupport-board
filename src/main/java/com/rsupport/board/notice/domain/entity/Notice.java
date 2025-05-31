@@ -1,7 +1,7 @@
-package com.rsupport.board.notice.domain;
+package com.rsupport.board.notice.domain.entity;
 
 import com.rsupport.board.common.entity.BaseTimeEntity;
-import com.rsupport.board.member.domain.Member;
+import com.rsupport.board.member.domain.entity.Member;
 
 import jakarta.persistence.*;
 import lombok.*;
