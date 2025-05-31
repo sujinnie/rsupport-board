@@ -8,9 +8,11 @@ import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 import java.nio.file.AccessDeniedException;
 import java.util.Arrays;
+import java.util.List;
 
 @Slf4j
 @RestControllerAdvice
@@ -44,8 +46,32 @@ public class GlobalExceptionHandler {
      * @Valid 검증 실패 시 발생하는 예외 처리 (@NotBlank 등..)
      */
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ResponseDTO<?>> handleValidationException(MethodArgumentNotValidException e) {
+    public ResponseEntity<ResponseDTO<?>> handleMethodArgumentNotValidException(MethodArgumentNotValidException e) {
         log.error("handleMethodArgumentNotValidException", e);
+
+        // field() : 검증 실패한 필드명 (ex. title, content 등)
+        // defaultMessage() : @NotBlank(message="...") 등에서 정의한 메시지
+        // 이것만 추출해서 검증 하기
+        List<String> errorMessages = e.getBindingResult()
+                .getFieldErrors()
+                .stream()
+                .map(fieldError -> fieldError.getDefaultMessage())
+                .toList();
+
+        String combinedMessage = String.join(", ", errorMessages);
+
+        ResponseDTO<?> body = ResponseDTO.error(ErrorCode.INVALID_INPUT_VALUE.getCode(), combinedMessage);
+        return ResponseEntity
+                .status(ErrorCode.INVALID_INPUT_VALUE.getStatus())
+                .body(body);
+    }
+
+    /**
+     * 바인딩 실패 시 발생하는 예외 처리
+     */
+    @ExceptionHandler(BindException.class)
+    protected ResponseEntity<ResponseDTO<?>> handleBindException(BindException e) {
+        log.error("handleBindException", e);
 
         ResponseDTO<?> body = ResponseDTO.error(ErrorCode.INVALID_INPUT_VALUE.getCode(), e.getMessage());
         return ResponseEntity
@@ -54,12 +80,12 @@ public class GlobalExceptionHandler {
     }
 
     /**
-     * 바인딩 실패 시 발생하는 예외 처리
-     * ref https://docs.spring.io/spring/docs/current/spring-framework-reference/web.html#mvc-ann-modelattrib-method-args
+     * enum type 일치하지 않아 binding 못할 경우 발생
+     * 주로 @RequestParam enum으로 binding 못했을 경우 발생
      */
-    @ExceptionHandler(BindException.class)
-    protected ResponseEntity<ResponseDTO<?>> handleBindException(BindException e) {
-        log.error("handleBindException", e);
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    protected ResponseEntity<ResponseDTO<?>> handleMethodArgumentTypeMismatchException(MethodArgumentTypeMismatchException e) {
+        log.error("handleMethodArgumentTypeMismatchException", e);
 
         ResponseDTO<?> body = ResponseDTO.error(ErrorCode.INVALID_INPUT_VALUE.getCode(), e.getMessage());
         return ResponseEntity
