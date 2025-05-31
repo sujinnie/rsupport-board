@@ -20,7 +20,8 @@ public enum ErrorCode {
 
     // Notice 관련 에러
     NOTICE_NOT_FOUND(HttpStatus.NOT_FOUND, "N0001", "해당 공지를 찾을 수 없습니다."),
-    ATTACHMENT_NOT_FOUND(HttpStatus.NOT_FOUND, "N0002", "첨부파일을 찾을 수 없습니다."),
+    INVALID_DATE_RANGE(HttpStatus.BAD_REQUEST, "N0002", "시작일과 종료일이 올바르지 않습니다."), // 시작일<종료일
+    ATTACHMENT_NOT_FOUND(HttpStatus.NOT_FOUND, "N0003", "첨부파일을 찾을 수 없습니다."),
 
     // Member 관련 에러
     MEMBER_NOT_FOUND(HttpStatus.NOT_FOUND, "M0001", "해당 회원을 찾을 수 없습니다.");
