@@ -1,8 +1,9 @@
-package com.rsupport.board.member.repository;
+package com.rsupport.board.member.domain.repository;
 
 import com.rsupport.board.common.config.JpaAuditingConfig;
-import com.rsupport.board.member.domain.Member;
+import com.rsupport.board.member.domain.entity.Member;
 
+import com.rsupport.board.member.domain.repository.MemberRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

@@ -1,11 +1,13 @@
-package com.rsupport.board.notice.repository;
+package com.rsupport.board.notice.domain.repository;
 
 import com.rsupport.board.common.config.JpaAuditingConfig;
-import com.rsupport.board.member.domain.Member;
-import com.rsupport.board.member.repository.MemberRepository;
-import com.rsupport.board.notice.domain.Attachment;
-import com.rsupport.board.notice.domain.Notice;
+import com.rsupport.board.member.domain.entity.Member;
+import com.rsupport.board.member.domain.repository.MemberRepository;
+import com.rsupport.board.notice.domain.entity.Attachment;
+import com.rsupport.board.notice.domain.entity.Notice;
 
+import com.rsupport.board.notice.domain.repository.AttachmentRepository;
+import com.rsupport.board.notice.domain.repository.NoticeRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
