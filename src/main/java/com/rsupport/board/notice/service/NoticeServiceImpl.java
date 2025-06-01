@@ -7,23 +7,29 @@ import com.rsupport.board.notice.api.dto.*;
 import com.rsupport.board.notice.domain.entity.Notice;
 import com.rsupport.board.notice.domain.entity.Attachment;
 import com.rsupport.board.member.domain.repository.MemberRepository;
+import com.rsupport.board.notice.domain.repository.AttachmentRepository;
 import com.rsupport.board.notice.domain.repository.NoticeRepository;
 import com.rsupport.board.notice.infra.FileStorageService;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.CollectionUtils;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class NoticeServiceImpl implements NoticeService {
     private final MemberRepository memberRepository;
     private final NoticeRepository noticeRepository;
+    private final AttachmentRepository attachmentRepository;
     private final FileStorageService fileStorageService;
 
     /**
@@ -145,5 +151,83 @@ public class NoticeServiceImpl implements NoticeService {
 
         // 응답 DTO로 변환
         return convertToResDTO(refreshed);
+    }
+
+    @Override
+    @Transactional
+    public NoticeResponseDTO updateNotice(Long userId, Long noticeId, NoticeUpdateReqDTO req) {
+        // 작성자 예외처리1 (회원여부)
+        Member member = memberRepository.findById(userId)
+                .orElseThrow(()-> new CustomExceptionHandler(ErrorCode.MEMBER_NOT_FOUND));
+
+        // 수정할 공지 조회
+        Notice notice = noticeRepository.findWithMemberAndAttachmentsById(noticeId)
+                .orElseThrow(()-> new CustomExceptionHandler(ErrorCode.NOTICE_NOT_FOUND));
+
+        // 작성자 예외처리2 (작성자만 공지 수정 가능)
+        if(!req.getUserId().equals(notice.getMember().getId())) {
+            throw new CustomExceptionHandler(ErrorCode.ACCESS_DENIED);
+        }
+
+        // 시작, 종료 일시 예외처리 (시작일 > 종료일 이면 에러)
+        LocalDateTime finalStart = (req.getStartAt() != null) ? req.getStartAt() : notice.getStartAt();
+        LocalDateTime finalEnd   = (req.getEndAt() != null) ? req.getEndAt() : notice.getEndAt();
+        if (finalStart.isAfter(finalEnd)) {
+            throw new CustomExceptionHandler(ErrorCode.INVALID_DATE_RANGE);
+        }
+
+        // 변경된 필드가 있을 때만 업데이트 !
+        if (req.getTitle() != null && !req.getTitle().trim().isEmpty()) {
+            notice.updateTitle(req.getTitle());
+        }
+        if (req.getContent() != null && !req.getContent().trim().isEmpty()) {
+            notice.updateContent(req.getContent());
+        }
+        if (req.getStartAt() != null) {
+            notice.updateStartAt(req.getStartAt());
+        }
+        if (req.getEndAt() != null) {
+            notice.updateEndAt(req.getEndAt());
+        }
+
+        // 삭제 요청한 첨부파일 처리 (원래 공지에 없었으면 에러, 있으면 삭제)
+        List<Long> removeIds = req.getRemoveAttachmentIds();
+        if (removeIds != null && !removeIds.isEmpty()) {
+            // 공지가 갖고 있는 파일 id list
+            Set<Long> existingAttachmentIds = notice.getAttachments()
+                    .stream()
+                    .map(Attachment::getId)
+                    .collect(Collectors.toSet());
+
+            // 삭제하려는 파일이 공지에 애초에 없었으면 에러
+            for (Long removeId : removeIds) {
+                if (!existingAttachmentIds.contains(removeId)) {
+                    throw new CustomExceptionHandler(ErrorCode.ATTACHMENT_NOT_FOUND);
+                }
+            }
+        }
+
+        // 삭제 요청한 첨부파일이 있으면 삭제
+        if (!CollectionUtils.isEmpty(removeIds)) {
+            attachmentRepository.deleteAllByIdIn(removeIds); // db 에서 제거
+            notice.getAttachments().removeIf(att -> removeIds.contains(att.getId()));
+        }
+
+        // 새로 추가된 파일이 있으면 추가해서 저장
+        MultipartFile[] newFiles = req.getNewFiles();
+        if (newFiles != null && newFiles.length > 0) {
+            for (MultipartFile file : newFiles) {
+                if (!file.isEmpty()) {
+                    Attachment savedAtt = fileStorageService.store(file);
+                    notice.addAttachment(savedAtt);
+                }
+            }
+        }
+
+        // 변경된 notice를 저장
+        Notice updatedNotice = noticeRepository.save(notice);
+
+        // 응답 DTO로 변환
+        return convertToResDTO(updatedNotice);
     }
 }

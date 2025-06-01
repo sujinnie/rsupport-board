@@ -9,7 +9,7 @@ public interface NoticeService {
      * 공지 등록 (create)
      *
      * @param req 등록할 공지 정보
-     * @return 생성된 공지id + 정보
+     * @return 생성된 공지 id + 정보
      */
     NoticeResponseDTO createNotice(NoticeCreateReqDTO req);
 
@@ -31,5 +31,14 @@ public interface NoticeService {
      */
     NoticeResponseDTO getNotice(Long userId, Long noticeId);
 
-    // todo: 수정 삭제
+    /**
+     * 공지 수정 (update)
+     *
+     * @param userId 수정자 id
+     * @param req 수정할 공지 정보
+     * @return 수정된 공지 내용
+     */
+    NoticeResponseDTO updateNotice(Long userId, Long noticeId, NoticeUpdateReqDTO req);
+
+    // todo: 삭제
 }
