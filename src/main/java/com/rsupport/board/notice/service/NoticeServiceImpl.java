@@ -3,19 +3,19 @@ package com.rsupport.board.notice.service;
 import com.rsupport.board.common.exception.CustomExceptionHandler;
 import com.rsupport.board.common.exception.ErrorCode;
 import com.rsupport.board.member.domain.entity.Member;
-import com.rsupport.board.notice.api.dto.AuthorInfoDTO;
+import com.rsupport.board.notice.api.dto.*;
 import com.rsupport.board.notice.domain.entity.Notice;
 import com.rsupport.board.notice.domain.entity.Attachment;
-import com.rsupport.board.notice.api.dto.NoticeCreateReqDTO;
-import com.rsupport.board.notice.api.dto.NoticeResponseDTO;
 import com.rsupport.board.member.domain.repository.MemberRepository;
 import com.rsupport.board.notice.domain.repository.NoticeRepository;
 import com.rsupport.board.notice.infra.FileStorageService;
 
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 
@@ -68,6 +68,7 @@ public class NoticeServiceImpl implements NoticeService {
 
     /**
      * 공지 -> response dto 로 변환
+     * todo: 필요하면 매퍼로 빼기?
      */
     private NoticeResponseDTO convertToResDTO(Notice notice) {
         AuthorInfoDTO author = new AuthorInfoDTO(
@@ -96,5 +97,30 @@ public class NoticeServiceImpl implements NoticeService {
                 author,
                 attachments
         );
+    }
+
+    /**
+     * 공지 목록 조회 서비스 (검색+페이지네이션)
+     */
+    @Override
+    @Transactional(readOnly = true)
+    public NoticeListResDTO getNoticeList(NoticeListReqDTO req, Pageable pageable) {
+        Page<NoticeListItemDTO> searchedNoticeList = noticeRepository.findAllBySearchCondition(req, pageable);
+        return convertToNoticeListDTO(searchedNoticeList);
+    }
+
+    /**
+     * Page<NoticeListItemDTO> -> NoticeListResDTO로 변환
+     */
+    public static NoticeListResDTO convertToNoticeListDTO(Page<NoticeListItemDTO> page) {
+        NoticeListResDTO.PageInfo pageInfo = new NoticeListResDTO.PageInfo(
+                page.getNumber(),
+                page.getSize(),
+                page.getTotalElements(),
+                page.getTotalPages(),
+                page.isFirst(),
+                page.isLast()
+        );
+        return new NoticeListResDTO(page.getContent(), pageInfo);
     }
 }
