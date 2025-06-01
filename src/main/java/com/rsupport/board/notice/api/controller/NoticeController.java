@@ -11,14 +11,15 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 /**
@@ -26,6 +27,7 @@ import org.springframework.web.bind.annotation.*;
  */
 @Slf4j
 @RestController
+@Validated
 @RequestMapping("/v1/notices")
 @Tag(name = "Notice", description = "공지 관련 API")
 @RequiredArgsConstructor
@@ -41,12 +43,12 @@ public class NoticeController {
             ),
             @ApiResponse(
                     responseCode = "400",
-                    description = "잘못된 요청입니다. (제목, 내용 등 유효성 검사 실패)",
+                    description = "[BAD_REQUEST] 제목, 내용 등 유효성 검사 실패한 경우",
                     content = @Content(schema = @Schema(implementation = ResponseDTO.class))
             ),
             @ApiResponse(
                     responseCode = "404",
-                    description = "존재하지 않는 사용자입니다",
+                    description = "[NOT_FOUND] 존재하지 않는 사용자인 경우",
                     content = @Content(schema = @Schema(implementation = ResponseDTO.class))
             )
     })
@@ -82,6 +84,37 @@ public class NoticeController {
         log.info("GET /v1/notices?{}, pageable={}", searchConditions, pageable);
 
         NoticeListResDTO res = noticeService.getNoticeList(searchConditions, pageable);
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(ResponseDTO.success(res));
+    }
+
+    @Operation(summary = "공지 상세 조회", description = "선택한 공지를 조회합니다.")
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "200", // http status 200 ok 반환
+                    description = "공지가 조회되었습니다.",
+                    content = @Content(schema = @Schema(implementation = NoticeListItemDTO.class))
+            ),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "[BAD_REQUEST] userId나 noticeId가 누락된 경우",
+                    content = @Content(schema = @Schema(implementation = ResponseDTO.class))
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "[NOT_FOUND] 존재하지 않는 공지이거나 사용자인 경우",
+                    content = @Content(schema = @Schema(implementation = ResponseDTO.class))
+            )
+    })
+    @GetMapping(value = "/{noticeId}", produces = MediaType.APPLICATION_JSON_VALUE + ";charset=UTF-8")
+    public ResponseEntity<ResponseDTO<NoticeResponseDTO>> getNotice(
+            @NotNull @RequestParam Long userId,
+            @PathVariable Long noticeId
+    ) {
+        log.info("GET /v1/notices/{}?{}", noticeId, userId);
+
+        NoticeResponseDTO res = noticeService.getNotice(userId, noticeId);
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(ResponseDTO.success(res));

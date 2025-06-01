@@ -3,8 +3,11 @@ package com.rsupport.board.notice.domain.repository;
 import com.rsupport.board.notice.api.dto.NoticeListItemDTO;
 import com.rsupport.board.notice.api.dto.NoticeListReqDTO;
 
+import com.rsupport.board.notice.domain.entity.Notice;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+
+import java.util.Optional;
 
 public interface NoticeRepositoryCustom {
     /**
@@ -15,4 +18,12 @@ public interface NoticeRepositoryCustom {
      * @return 페이지네이션된 공지 리스트
      */
     Page<NoticeListItemDTO> findAllBySearchCondition(NoticeListReqDTO req, Pageable pageable);
+
+    /**
+     * 공지 상세 조회 (멤버, 첨부파일 정보 함께 가져오기, n+1방지)
+     *
+     * @param noticeId 조회할 공지 id
+     * @return 공지
+     */
+    Optional<Notice> findWithMemberAndAttachmentsById(Long noticeId);
 }

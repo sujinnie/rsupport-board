@@ -1,8 +1,11 @@
 package com.rsupport.board.notice.domain.repository;
 
+import com.rsupport.board.member.domain.entity.Member;
+import com.rsupport.board.member.domain.entity.QMember;
 import com.rsupport.board.notice.api.dto.NoticeListItemDTO;
 import com.rsupport.board.notice.api.dto.NoticeListReqDTO;
 import com.rsupport.board.notice.api.dto.QNoticeListItemDTO;
+import com.rsupport.board.notice.domain.entity.Notice;
 import com.rsupport.board.notice.domain.entity.QAttachment;
 import com.rsupport.board.notice.domain.entity.QNotice;
 
@@ -19,6 +22,7 @@ import org.springframework.stereotype.Repository;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public class NoticeRepositoryImpl implements NoticeRepositoryCustom {
@@ -30,6 +34,7 @@ public class NoticeRepositoryImpl implements NoticeRepositoryCustom {
 
     private final QNotice notice = QNotice.notice;
     private final QAttachment attachment = QAttachment.attachment;
+    private final QMember member = QMember.member;
 
     /**
      * 공지 목록 조회 쿼리 (검색+페이지네이션)
@@ -109,5 +114,19 @@ public class NoticeRepositoryImpl implements NoticeRepositoryCustom {
         }
 
         return result;
+    }
+
+    /**
+     * 공지 상세 조회 쿼리 (멤버, 첨부파일 패치조인해서 가져오기)
+     */
+    @Override
+    public Optional<Notice> findWithMemberAndAttachmentsById(Long noticeId) {
+        Notice fetchedNotice = queryFactory.selectFrom(notice)
+                .join(notice.member, member).fetchJoin()
+                .leftJoin(notice.attachments, attachment).fetchJoin()
+                .where(notice.id.eq(noticeId))
+                .fetchOne();
+
+        return Optional.ofNullable(fetchedNotice);
     }
 }

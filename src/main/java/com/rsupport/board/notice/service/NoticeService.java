@@ -6,7 +6,7 @@ import org.springframework.data.domain.Pageable;
 public interface NoticeService {
 
     /**
-     * 공지 등록(create)
+     * 공지 등록 (create)
      *
      * @param req 등록할 공지 정보
      * @return 생성된 공지id + 정보
@@ -22,5 +22,14 @@ public interface NoticeService {
      */
     NoticeListResDTO getNoticeList(NoticeListReqDTO req, Pageable pageable);
 
-    // todo: 상세조회 수정 삭제
+    /**
+     * 공지 상세 조회 (read)
+     *
+     * @param userId 유저 id
+     * @param noticeId 공지 id
+     * @return 공지 상세 내용
+     */
+    NoticeResponseDTO getNotice(Long userId, Long noticeId);
+
+    // todo: 수정 삭제
 }
