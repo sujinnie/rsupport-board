@@ -15,7 +15,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 /**
- * 통합 테스트
+ * 공지생성 서비스 통합 테스트
  */
 @ExtendWith(SpringExtension.class)
 @SpringBootTest

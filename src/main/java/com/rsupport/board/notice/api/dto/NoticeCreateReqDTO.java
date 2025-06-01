@@ -2,7 +2,6 @@ package com.rsupport.board.notice.api.dto;
 
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Schema;
-import jakarta.validation.constraints.Future;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
@@ -41,8 +40,6 @@ public class NoticeCreateReqDTO {
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
     private LocalDateTime endAt;
 
-//    @Schema(description = "첨부파일 리스트(0개이상)", example = "[\"file1.png\", \"document.pdf\"]",
-//            type = "array", format = "binary")
     @ArraySchema(
             schema = @Schema(
                     description = "첨부파일 리스트(0개 이상)",
