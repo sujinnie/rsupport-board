@@ -1,5 +1,6 @@
 package com.rsupport.board.notice.api.controller;
 
+import com.rsupport.board.common.exception.ErrorCode;
 import com.rsupport.board.member.domain.entity.Member;
 import com.rsupport.board.member.domain.repository.MemberRepository;
 import com.rsupport.board.notice.domain.entity.Attachment;
@@ -142,8 +143,8 @@ public class NoticeController_getIntegrationTest {
                 .andExpect(jsonPath("$.status").value("error"))
                 .andExpect(jsonPath("$.data").isEmpty())
                 // ErrorCode
-                .andExpect(jsonPath("$.exception.code").value("M0001"))
-                .andExpect(jsonPath("$.exception.message").value("해당 회원을 찾을 수 없습니다."));
+                .andExpect(jsonPath("$.exception.code").value(ErrorCode.MEMBER_NOT_FOUND.getCode()))
+                .andExpect(jsonPath("$.exception.message").value(ErrorCode.MEMBER_NOT_FOUND.getMessage()));
     }
 
     @Test
@@ -163,7 +164,7 @@ public class NoticeController_getIntegrationTest {
                 .andExpect(jsonPath("$.status").value("error"))
                 .andExpect(jsonPath("$.data").isEmpty())
                 // ErrorCode
-                .andExpect(jsonPath("$.exception.code").value("N0001"))
-                .andExpect(jsonPath("$.exception.message").value("해당 공지를 찾을 수 없습니다."));
+                .andExpect(jsonPath("$.exception.code").value(ErrorCode.NOTICE_NOT_FOUND.getCode()))
+                .andExpect(jsonPath("$.exception.message").value(ErrorCode.NOTICE_NOT_FOUND.getMessage()));
     }
 }
