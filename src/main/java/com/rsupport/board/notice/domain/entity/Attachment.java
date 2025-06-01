@@ -37,11 +37,19 @@ public class Attachment {
     private LocalDateTime uploadedAt;
 
     @Builder
-    public Attachment(Long id, String filename, String url, LocalDateTime uploadedAt) {
+    public Attachment(String filename, String url, LocalDateTime uploadedAt){
+        this.filename = filename;
+        this.url = url;
+        this.uploadedAt = uploadedAt;
+    }
+
+    @Builder(builderClassName = "TestBuilder", builderMethodName = "testBuilder")
+    public Attachment(Long id, String filename, String url, LocalDateTime uploadedAt, Notice notice){
         this.id = id;
         this.filename = filename;
         this.url = url;
         this.uploadedAt = uploadedAt;
+        this.notice = notice;
     }
 
     void setNotice(Notice notice) {

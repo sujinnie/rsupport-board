@@ -65,9 +65,21 @@ public class Notice extends BaseTimeEntity {
     /**
      * 단위테스트용..
      */
-    public void setId(Long id) {
+    @Builder(builderClassName = "TestBuilder", builderMethodName = "testBuilder")
+    public Notice(Long id, String title, String content, LocalDateTime startAt, LocalDateTime endAt,
+                  int viewCount, Member member, LocalDateTime createdAt, LocalDateTime updatedAt) {
         this.id = id;
+        this.title = title;
+        this.content = content;
+        this.startAt = startAt;
+        this.endAt = endAt;
+        this.viewCount = viewCount;
+        this.member = member;
+        super.setCreatedAt(createdAt);
+        super.setUpdatedAt(updatedAt);
     }
+
+    public void setId(long id) { this.id = id; }
 
     /**
      * 첨부파일 추가
@@ -85,5 +97,4 @@ public class Notice extends BaseTimeEntity {
     public void increaseViewCount() {
         this.viewCount++;
     }
-
 }
