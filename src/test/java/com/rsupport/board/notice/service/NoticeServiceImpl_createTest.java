@@ -28,10 +28,10 @@ import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 /**
- * 서비스 단위테스트
+ * 공재 생성 서비스 단위테스트
  */
 @ExtendWith(MockitoExtension.class)
-class NoticeServiceImplTest {
+class NoticeServiceImpl_createTest {
     @Mock
     private MemberRepository memberRepository;
 
@@ -66,7 +66,7 @@ class NoticeServiceImplTest {
     @Test
     @DisplayName("1. 유저존재 + 첨부파일 없이 공지 생성 -> 성공")
     void createNotice_withoutFiles_success() {
-        ////// given //////
+        // given
         NoticeCreateReqDTO req = NoticeCreateReqDTO.builder()
                 .userId(1L)
                 .title("공지생성 테스트1 - 파일없음")
@@ -86,7 +86,7 @@ class NoticeServiceImplTest {
             return arg;
         });
 
-        ////// when //////
+        // when
         NoticeResponseDTO responseDTO = noticeService.createNotice(req);
 
         ////// then //////
@@ -119,7 +119,7 @@ class NoticeServiceImplTest {
     @Test
     @DisplayName("2. 유저존재 + 첨부파일 여러개 업로드 -> 성공")
     void createNotice_withMultipleFiles_success() throws Exception {
-        ////// given //////
+        // given
         // 더미 MultipartFile 2개 생성
         MultipartFile file1 = mock(MultipartFile.class);
         when(file1.isEmpty()).thenReturn(false);
@@ -167,10 +167,10 @@ class NoticeServiceImplTest {
             return n;
         });
 
-        ////// when //////
+        // when
         NoticeResponseDTO responseDTO = noticeService.createNotice(req);
 
-        ////// then //////
+        // then
         // 작성자 조회 검증
         verify(memberRepository, times(1)).findById(1L);
 
@@ -229,7 +229,7 @@ class NoticeServiceImplTest {
     @Test
     @DisplayName("3. 존재하지 않는 유저 -> MEMBER_NOT_FOUND 예외 발생")
     void createNotice_memberNotFound_throwsException() {
-        ////// given //////
+        // given
         NoticeCreateReqDTO req = NoticeCreateReqDTO.builder()
                 .userId(99L) // 존재하지 않는 ID
                 .title("공지생성 테스트3 - 존재하지 않는 유저")
@@ -242,7 +242,7 @@ class NoticeServiceImplTest {
         // 유저 조회 시 빈 값을 반환하도록 세팅
         when(memberRepository.findById(99L)).thenReturn(Optional.empty());
 
-        ////// when+then //////
+        // when+then
         assertThatThrownBy(() -> noticeService.createNotice(req))
                 .isInstanceOf(CustomExceptionHandler.class) //예외 타입이 CustomExceptionHandler인지 확인
                 .extracting("errorCode") // 에러코드 가져와서
@@ -252,7 +252,7 @@ class NoticeServiceImplTest {
     @Test
     @DisplayName("4. 시작일<종료일 -> INVALID_DATE_RANGE 예외 발생")
     void createNotice_invalidDateRange_throwsException() {
-        ////// given //////
+        // given
         NoticeCreateReqDTO req = NoticeCreateReqDTO.builder()
                 .userId(1L)
                 .title("공지생성 테스트4 - 종료일이 시작일보다 빠를때")
@@ -264,7 +264,7 @@ class NoticeServiceImplTest {
 
         when(memberRepository.findById(1L)).thenReturn(Optional.of(sampleMember));
 
-        ////// when+then //////
+        // when+then
         assertThatThrownBy(() -> noticeService.createNotice(req))
                 .isInstanceOf(CustomExceptionHandler.class) //예외 타입이 CustomExceptionHandler인지 확인
                 .extracting("errorCode") // 에러코드 가져와서

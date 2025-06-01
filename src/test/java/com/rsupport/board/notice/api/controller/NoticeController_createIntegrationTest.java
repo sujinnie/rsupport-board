@@ -21,7 +21,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")  // application-test.properties를 사용
-class NoticeControllerIntegrationTest {
+class NoticeController_createIntegrationTest {
     @Autowired
     private MockMvc mockMvc;
 
