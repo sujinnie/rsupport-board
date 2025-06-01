@@ -54,16 +54,13 @@ public class Notice extends BaseTimeEntity {
         this.endAt = endAt;
     }
 
-    public void update(String title, String content, LocalDateTime startAt, LocalDateTime endAt) {
-        this.title = title;
-        this.content = content;
-        this.startAt = startAt;
-        this.endAt = endAt;
-    }
+    // 업데이트 메서드
+    public void updateTitle(String title) { this.title = title; }
+    public void updateContent(String content) { this.content = content; }
+    public void updateStartAt(LocalDateTime startAt) { this.startAt = startAt; }
+    public void updateEndAt(LocalDateTime endAt) { this.endAt = endAt; }
 
-    /**
-     * 단위테스트용..
-     */
+    // 단위테스트용 빌더..
     @Builder(builderClassName = "TestBuilder", builderMethodName = "testBuilder")
     public Notice(Long id, String title, String content, LocalDateTime startAt, LocalDateTime endAt,
                   int viewCount, Member member, LocalDateTime createdAt, LocalDateTime updatedAt) {
@@ -80,20 +77,9 @@ public class Notice extends BaseTimeEntity {
 
     public void setId(long id) { this.id = id; }
 
-    /**
-     * 첨부파일 추가
-     *
-     * @param attachment
-     */
+    // 첨부파일 추가
     public void addAttachment(Attachment attachment) {
         this.attachments.add(attachment);
         attachment.setNotice(this);
-    }
-
-    /**
-     * 조회수 증가
-     */
-    public void increaseViewCount() {
-        this.viewCount++;
     }
 }

@@ -38,7 +38,7 @@ public class NoticeController {
     @ApiResponses({
             @ApiResponse(
                     responseCode = "201", // http status 201 created 반환
-                    description = "공지 등록이 완료되었습니다.",
+                    description = "[CREATED] 공지 등록이 완료되었습니다.",
                     content = @Content(schema = @Schema(implementation = NoticeResponseDTO.class))
             ),
             @ApiResponse(
@@ -54,7 +54,7 @@ public class NoticeController {
     })
     @PostMapping(
         consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
-        produces = MediaType.APPLICATION_JSON_VALUE
+        produces = MediaType.APPLICATION_JSON_VALUE + ";charset=UTF-8"
     )
     public ResponseEntity<ResponseDTO<NoticeResponseDTO>> createNotice(
             @Valid @ModelAttribute NoticeCreateReqDTO req
@@ -72,7 +72,7 @@ public class NoticeController {
     @ApiResponses({
             @ApiResponse(
                     responseCode = "200", // http status 200 ok 반환
-                    description = "공지 목록이 조회되었습니다.",
+                    description = "[OK] 공지 목록이 조회되었습니다.",
                     content = @Content(schema = @Schema(implementation = NoticeListItemDTO.class))
             )
     })
@@ -93,7 +93,7 @@ public class NoticeController {
     @ApiResponses({
             @ApiResponse(
                     responseCode = "200", // http status 200 ok 반환
-                    description = "공지가 조회되었습니다.",
+                    description = "[OK] 공지가 조회되었습니다.",
                     content = @Content(schema = @Schema(implementation = NoticeListItemDTO.class))
             ),
             @ApiResponse(
@@ -115,6 +115,46 @@ public class NoticeController {
         log.info("GET /v1/notices/{}?{}", noticeId, userId);
 
         NoticeResponseDTO res = noticeService.getNotice(userId, noticeId);
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(ResponseDTO.success(res));
+    }
+
+    @Operation(summary = "공지 수정", description = "공지를 수정합니다. 작성자만 수정할 수 있습니다.")
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "200", // http status 200 ok 반환
+                    description = "[OK] 공지 수정이 완료되었습니다.",
+                    content = @Content(schema = @Schema(implementation = NoticeResponseDTO.class))
+            ),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "[BAD_REQUEST] userId나 noticeId가 누락된 경우",
+                    content = @Content(schema = @Schema(implementation = ResponseDTO.class))
+            ),
+            @ApiResponse(
+                    responseCode = "403",
+                    description = "[FORBIDDEN] 권한없음: 수정하려는 유저가 작성자가 아닌 경우",
+                    content = @Content(schema = @Schema(implementation = ResponseDTO.class))
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "[NOT_FOUND] 존재하지 않는 공지이거나 사용자인 경우",
+                    content = @Content(schema = @Schema(implementation = ResponseDTO.class))
+            )
+    })
+    @PatchMapping(
+            value = "/{noticeId}",
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            produces = MediaType.APPLICATION_JSON_VALUE + ";charset=UTF-8"
+    )
+    public ResponseEntity<ResponseDTO<NoticeResponseDTO>> updateNotice(
+            @PathVariable Long noticeId,
+            @Valid @ModelAttribute NoticeUpdateReqDTO req
+    ) {
+        log.info("PATCH /v1/notices/{}?{}", noticeId, req);
+
+        NoticeResponseDTO res = noticeService.updateNotice(req.getUserId(), noticeId, req);
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(ResponseDTO.success(res));
