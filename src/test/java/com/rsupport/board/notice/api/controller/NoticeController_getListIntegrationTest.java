@@ -60,7 +60,7 @@ class NoticeController_getListIntegrationTest {
         Member m = Member.builder()
                 .name("테스트유저")
                 .email("testuser@example.com")
-                .password("password123")
+                .password("pwd123")
                 .build();
         savedMember = memberRepository.save(m);
 
