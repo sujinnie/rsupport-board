@@ -14,6 +14,8 @@ import java.time.LocalDateTime;
  *   "title": "test",
  *   "hasAttachment": false,
  *   "createdAt": "2025-06-01T18:00:00",
+ *   "createdAt": "2025-06-01T18:00:00",
+ *    "createdAt": "2025-06-01T18:00:00",
  *   "viewCount": 777,
  *   "author": {
  *     "id": 1,
@@ -28,16 +30,20 @@ public class NoticeListItemDTO {
     private String title;
     private Boolean hasAttachment;
     private LocalDateTime createdAt;
+    private LocalDateTime startAt;
+    private LocalDateTime endAt;
     private Integer viewCount;
     private AuthorInfoDTO author;
 
     @QueryProjection
-    public NoticeListItemDTO(Long id,  String title, Boolean hasAttachment, LocalDateTime createdAt,
-                             Integer viewCount, Long authorId, String authorName) {
+    public NoticeListItemDTO(Long id,  String title, Boolean hasAttachment, LocalDateTime createdAt, LocalDateTime startAt,
+                             LocalDateTime endAt, Integer viewCount, Long authorId, String authorName) {
         this.id = id;
         this.title = title;
         this.hasAttachment = hasAttachment;
         this.createdAt = createdAt;
+        this.startAt = startAt;
+        this.endAt = endAt;
         this.viewCount = viewCount;
         this.author = new AuthorInfoDTO(authorId, authorName);
     }
