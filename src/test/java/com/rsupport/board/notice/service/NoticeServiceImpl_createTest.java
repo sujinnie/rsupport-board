@@ -141,7 +141,7 @@ class NoticeServiceImpl_createTest {
         // note: thenAnswer
         // FileStorageService.store(...)가 호출될 때마다 다른 Attachment를 반환하도록 세팅
         when(fileStorageService.store(file1)).thenAnswer(invocation -> {
-            Attachment a = Attachment.builder()
+            Attachment a = Attachment.testBuilder()
                     .id(11L)
                     .filename("testImg1.png")
                     .url("/uploads/testImg1.png")
@@ -151,7 +151,7 @@ class NoticeServiceImpl_createTest {
         });
 
         when(fileStorageService.store(file2)).thenAnswer(invocation -> {
-            Attachment a = Attachment.builder()
+            Attachment a = Attachment.testBuilder()
                     .id(12L)
                     .filename("testDoc1.pdf")
                     .url("/uploads/testDoc1.pdf")

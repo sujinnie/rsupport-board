@@ -54,7 +54,7 @@ class AttachmentRepositoryTest {
         noticeRepo.save(n);
 
         // 3) Attachment 저장
-        Attachment att = Attachment.builder()
+        Attachment att = Attachment.testBuilder()
                 .filename("test.txt")
                 .url("/upload/test.txt")
                 .build();
