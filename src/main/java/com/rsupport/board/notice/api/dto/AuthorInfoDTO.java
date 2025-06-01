@@ -1,14 +1,13 @@
 package com.rsupport.board.notice.api.dto;
 
 import com.querydsl.core.annotations.QueryProjection;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
+import lombok.Data;
 import lombok.NoArgsConstructor;
 
 /**
  * 공지 생성/조회/수정/삭제 등에 필요한 작성자 정보
  */
-@Getter
+@Data
 @NoArgsConstructor
 public class AuthorInfoDTO {
     private Long id;
