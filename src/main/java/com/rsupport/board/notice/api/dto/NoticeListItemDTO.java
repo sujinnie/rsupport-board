@@ -14,8 +14,8 @@ import java.time.LocalDateTime;
  *   "title": "test",
  *   "hasAttachment": false,
  *   "createdAt": "2025-06-01T18:00:00",
- *   "createdAt": "2025-06-01T18:00:00",
- *    "createdAt": "2025-06-01T18:00:00",
+ *   "startAt": "2025-06-01T18:00:00",
+ *   "endAt": "2025-06-05T18:00:00",
  *   "viewCount": 777,
  *   "author": {
  *     "id": 1,

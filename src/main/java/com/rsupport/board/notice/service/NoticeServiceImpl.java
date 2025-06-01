@@ -68,7 +68,6 @@ public class NoticeServiceImpl implements NoticeService {
 
     /**
      * 공지 -> response dto 로 변환
-     * todo: 필요하면 매퍼로 빼기?
      */
     private NoticeResponseDTO convertToResDTO(Notice notice) {
         AuthorInfoDTO author = new AuthorInfoDTO(
@@ -76,8 +75,8 @@ public class NoticeServiceImpl implements NoticeService {
                 notice.getMember().getName()
         );
 
-        List<NoticeResponseDTO.AttachmentDTO> attachments = notice.getAttachments().stream()
-                .map(attachment -> new NoticeResponseDTO.AttachmentDTO(
+        List<AttachmentInfoDTO> attachments = notice.getAttachments().stream()
+                .map(attachment -> new AttachmentInfoDTO(
                         attachment.getId(),
                         attachment.getFilename(),
                         attachment.getUrl(),
@@ -103,7 +102,7 @@ public class NoticeServiceImpl implements NoticeService {
      * 공지 목록 조회 서비스 (검색+페이지네이션)
      */
     @Override
-    @Transactional(readOnly = true)
+    @Transactional
     public NoticeListResDTO getNoticeList(NoticeListReqDTO req, Pageable pageable) {
         Page<NoticeListItemDTO> searchedNoticeList = noticeRepository.findAllBySearchCondition(req, pageable);
         return convertToNoticeListDTO(searchedNoticeList);
@@ -122,5 +121,29 @@ public class NoticeServiceImpl implements NoticeService {
                 page.isLast()
         );
         return new NoticeListResDTO(page.getContent(), pageInfo);
+    }
+
+
+    /**
+     * 공지 상세 조회 서비스 (read)
+     */
+    @Override
+    @Transactional
+    public NoticeResponseDTO getNotice(Long userId, Long noticeId) {
+        // 작성자 예외처리 (유저만 공지 등록 가능)
+        Member member = memberRepository.findById(userId)
+                .orElseThrow(()-> new CustomExceptionHandler(ErrorCode.MEMBER_NOT_FOUND));
+
+        // 공지 id 확인
+        Notice notice = noticeRepository.findWithMemberAndAttachmentsById(noticeId)
+                .orElseThrow(()-> new CustomExceptionHandler(ErrorCode.NOTICE_NOT_FOUND));
+
+        // 조회수 증가
+        noticeRepository.incrementViewCountOnly(noticeId);
+        Notice refreshed = noticeRepository.findWithMemberAndAttachmentsById(noticeId)
+                .orElseThrow(()-> new CustomExceptionHandler(ErrorCode.NOTICE_NOT_FOUND));
+
+        // 응답 DTO로 변환
+        return convertToResDTO(refreshed);
     }
 }

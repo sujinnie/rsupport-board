@@ -4,6 +4,7 @@ import com.rsupport.board.common.exception.CustomExceptionHandler;
 import com.rsupport.board.common.exception.ErrorCode;
 import com.rsupport.board.member.domain.entity.Member;
 import com.rsupport.board.member.domain.repository.MemberRepository;
+import com.rsupport.board.notice.api.dto.AttachmentInfoDTO;
 import com.rsupport.board.notice.api.dto.NoticeCreateReqDTO;
 import com.rsupport.board.notice.api.dto.NoticeResponseDTO;
 import com.rsupport.board.notice.domain.entity.Attachment;
@@ -212,14 +213,14 @@ class NoticeServiceImpl_createTest {
         assertThat(responseDTO.getAuthor().getName()).isEqualTo("테스트유저");
         assertThat(responseDTO.getAttachments()).hasSize(2);
 
-        // DTO 내부의 AttachmentDTO 검증
-        NoticeResponseDTO.AttachmentDTO attDTO1 = responseDTO.getAttachments().get(0);
+        // DTO 내부의 Attachment 검증
+        AttachmentInfoDTO attDTO1 = responseDTO.getAttachments().get(0);
         assertThat(attDTO1.getId()).isEqualTo(11L);
         assertThat(attDTO1.getFilename()).isEqualTo("testImg1.png");
         assertThat(attDTO1.getUrl()).isEqualTo("/uploads/testImg1.png");
         assertThat(attDTO1.getUploadedAt()).isEqualTo(now.plusMinutes(1));
 
-        NoticeResponseDTO.AttachmentDTO attDTO2 = responseDTO.getAttachments().get(1);
+        AttachmentInfoDTO attDTO2 = responseDTO.getAttachments().get(1);
         assertThat(attDTO2.getId()).isEqualTo(12L);
         assertThat(attDTO2.getFilename()).isEqualTo("testDoc1.pdf");
         assertThat(attDTO2.getUrl()).isEqualTo("/uploads/testDoc1.pdf");
