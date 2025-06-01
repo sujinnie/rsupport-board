@@ -50,6 +50,8 @@ public class NoticeRepositoryImpl implements NoticeRepositoryCustom {
                                 .then(true)
                                 .otherwise(false),
                         notice.createdAt,
+                        notice.startAt,
+                        notice.endAt,
                         notice.viewCount,
                         notice.member.id,
                         notice.member.name

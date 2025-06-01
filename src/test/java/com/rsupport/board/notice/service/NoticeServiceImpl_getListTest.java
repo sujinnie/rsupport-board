@@ -37,13 +37,15 @@ class NoticeServiceImpl_getListTest {
     private NoticeListReqDTO sampleReq;
     private Pageable samplePageable;
 
-    private NoticeListItemDTO buildReq(Long id, String title, Boolean hasAttachment, LocalDateTime createdAt,
-                                       Integer viewCount, Long authorId, String authorName) {
+    private NoticeListItemDTO buildReq(Long id, String title, Boolean hasAttachment, LocalDateTime createdAt,  LocalDateTime startAt,
+                                       LocalDateTime endAt, Integer viewCount, Long authorId, String authorName) {
         return new NoticeListItemDTO(
                 id,
                 title,
                 hasAttachment,
                 createdAt,
+                startAt,
+                endAt,
                 viewCount,
                 authorId,
                 authorName
@@ -71,11 +73,15 @@ class NoticeServiceImpl_getListTest {
         NoticeListItemDTO item1 = buildReq(
                 100L, "첫번째 공지", true,
                 LocalDateTime.of(2025, 5, 10, 9, 0, 0),
+                LocalDateTime.of(2025, 5, 10, 9, 0, 0),
+                LocalDateTime.of(2025, 5, 15, 9, 0, 0),
                 5, 1L, "작성자A"
         );
         NoticeListItemDTO item2 = buildReq(
                 101L, "두번째 공지", false,
                 LocalDateTime.of(2025, 5, 5, 14, 30, 0),
+                LocalDateTime.of(2025, 5, 5, 14, 30, 0),
+                LocalDateTime.of(2025, 5, 7, 14, 30, 0),
                 2, 2L, "작성자B"
         );
         List<NoticeListItemDTO> noticeList = List.of(item1, item2);
