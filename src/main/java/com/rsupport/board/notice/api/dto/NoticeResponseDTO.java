@@ -20,15 +20,15 @@ public class NoticeResponseDTO {
     private LocalDateTime updatedAt;
     private Long viewCount;
     private AuthorInfoDTO author; //작성자(==멤버,유저)
-    private List<AttachmentDTO> attachments;
+    private List<AttachmentInfoDTO> attachments;
 
-    @Data
-    @NoArgsConstructor
-    @AllArgsConstructor
-    public static class AttachmentDTO {
-        private Long id;
-        private String filename;
-        private String url;
-        private LocalDateTime uploadedAt;
-    }
+//    @Data
+//    @NoArgsConstructor
+//    @AllArgsConstructor
+//    public static class AttachmentDTO {
+//        private Long id;
+//        private String filename;
+//        private String url;
+//        private LocalDateTime uploadedAt;
+//    }
 }

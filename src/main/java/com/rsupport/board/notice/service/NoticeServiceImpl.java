@@ -76,8 +76,8 @@ public class NoticeServiceImpl implements NoticeService {
                 notice.getMember().getName()
         );
 
-        List<NoticeResponseDTO.AttachmentDTO> attachments = notice.getAttachments().stream()
-                .map(attachment -> new NoticeResponseDTO.AttachmentDTO(
+        List<AttachmentInfoDTO> attachments = notice.getAttachments().stream()
+                .map(attachment -> new AttachmentInfoDTO(
                         attachment.getId(),
                         attachment.getFilename(),
                         attachment.getUrl(),
