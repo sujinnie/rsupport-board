@@ -19,17 +19,8 @@ public class NoticeResponseDTO {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private Long viewCount;
-    private AuthorDTO author; //작성자(==멤버,유저)
+    private AuthorInfoDTO author; //작성자(==멤버,유저)
     private List<AttachmentDTO> attachments;
-
-    @Data
-    @NoArgsConstructor
-    @AllArgsConstructor
-    public static class AuthorDTO {
-        private Long id;
-        private String name;
-        private String email;
-    }
 
     @Data
     @NoArgsConstructor

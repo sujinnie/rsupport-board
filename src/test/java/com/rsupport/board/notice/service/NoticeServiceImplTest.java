@@ -113,7 +113,6 @@ class NoticeServiceImplTest {
         assertThat(responseDTO.getContent()).isEqualTo("첨부파일 없는 공지 생성 테스트");
         assertThat(responseDTO.getAuthor().getId()).isEqualTo(1L);
         assertThat(responseDTO.getAuthor().getName()).isEqualTo("테스트유저");
-        assertThat(responseDTO.getAuthor().getEmail()).isEqualTo("create-test@example.com");
         assertThat(responseDTO.getAttachments()).isEmpty();
     }
 
@@ -211,7 +210,6 @@ class NoticeServiceImplTest {
         assertThat(responseDTO.getContent()).isEqualTo("첨부파일 여러개 생성 테스트");
         assertThat(responseDTO.getAuthor().getId()).isEqualTo(1L);
         assertThat(responseDTO.getAuthor().getName()).isEqualTo("테스트유저");
-        assertThat(responseDTO.getAuthor().getEmail()).isEqualTo("create-test@example.com");
         assertThat(responseDTO.getAttachments()).hasSize(2);
 
         // DTO 내부의 AttachmentDTO 검증

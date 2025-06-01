@@ -3,6 +3,7 @@ package com.rsupport.board.notice.service;
 import com.rsupport.board.common.exception.CustomExceptionHandler;
 import com.rsupport.board.common.exception.ErrorCode;
 import com.rsupport.board.member.domain.entity.Member;
+import com.rsupport.board.notice.api.dto.AuthorInfoDTO;
 import com.rsupport.board.notice.domain.entity.Notice;
 import com.rsupport.board.notice.domain.entity.Attachment;
 import com.rsupport.board.notice.api.dto.NoticeCreateReqDTO;
@@ -69,10 +70,9 @@ public class NoticeServiceImpl implements NoticeService {
      * 공지 -> response dto 로 변환
      */
     private NoticeResponseDTO convertToResDTO(Notice notice) {
-        NoticeResponseDTO.AuthorDTO author = new NoticeResponseDTO.AuthorDTO(
+        AuthorInfoDTO author = new AuthorInfoDTO(
                 notice.getMember().getId(),
-                notice.getMember().getName(),
-                notice.getMember().getEmail()
+                notice.getMember().getName()
         );
 
         List<NoticeResponseDTO.AttachmentDTO> attachments = notice.getAttachments().stream()
