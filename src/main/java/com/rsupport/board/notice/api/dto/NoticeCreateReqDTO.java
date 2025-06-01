@@ -27,7 +27,7 @@ public class NoticeCreateReqDTO {
     private String content;
 
     @Schema(description = "작성자 id", example = "1")
-    @NotNull
+    @NotNull(message = "userId는 필수입니다.")
     private Long userId;
 
     @Schema(description = "공지 시작 일시", example = "2025-06-01T00:00:00", type="string", format="date-time")
