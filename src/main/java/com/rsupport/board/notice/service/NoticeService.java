@@ -40,5 +40,11 @@ public interface NoticeService {
      */
     NoticeResponseDTO updateNotice(Long userId, Long noticeId, NoticeUpdateReqDTO req);
 
-    // todo: 삭제
+    /**
+     * 공지 삭제 (delete)
+     *
+     * @param userId 삭제하려는 유저 id
+     * @param noticeId 삭제할 공지 id
+     */
+    void deleteNotice(Long userId, Long noticeId);
 }

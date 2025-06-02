@@ -20,6 +20,6 @@ public interface NoticeRepository extends JpaRepository<Notice, Long>, NoticeRep
     // todo: 조회수가 커지면 ...캐싱..?
     @Modifying(clearAutomatically = true) // 영속성 초기화
     @Query("UPDATE Notice n SET n.viewCount = n.viewCount + 1 WHERE n.id = :id")
-    int incrementViewCountOnly(@Param("id") Long id);
+    void incrementViewCountOnly(@Param("id") Long id);
 
 }
