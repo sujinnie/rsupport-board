@@ -1,6 +1,5 @@
 package com.rsupport.board.notice.api.controller;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.rsupport.board.member.domain.entity.Member;
 import com.rsupport.board.member.domain.repository.MemberRepository;
 import com.rsupport.board.notice.domain.entity.Attachment;
@@ -44,10 +43,7 @@ class NoticeController_getListIntegrationTest {
     @Autowired
     private AttachmentRepository attachmentRepository;
 
-    @Autowired
-    private ObjectMapper objectMapper;
-
-    private Member savedMember;
+    private Member sampleMember;
 
     @BeforeEach
     void setUp() {
@@ -62,12 +58,12 @@ class NoticeController_getListIntegrationTest {
                 .email("testuser@example.com")
                 .password("pwd123")
                 .build();
-        savedMember = memberRepository.save(m);
+        sampleMember = memberRepository.save(m);
 
         // 테스트용 공지 3개 생성
         // 공지1: 작성일 2025-05-01, 첨부파일 없음
         Notice notice1 = Notice.testBuilder()
-                .member(savedMember)
+                .member(sampleMember)
                 .title("찐공지테스트1")
                 .content("2025-05-01 첨부파일 없음 공지내용1")
                 .startAt(LocalDateTime.of(2025, 5, 1, 0, 0))
@@ -80,7 +76,7 @@ class NoticeController_getListIntegrationTest {
 
         // 공지2: 작성일 2025-05-10, 첨부파일 1개
         Notice notice2 = Notice.testBuilder()
-                .member(savedMember)
+                .member(sampleMember)
                 .title("공지테스트2")
                 .content("2025-05-10 첨부파일1개 공지내용2")
                 .startAt(LocalDateTime.of(2025, 5, 10, 0, 0))
@@ -101,7 +97,7 @@ class NoticeController_getListIntegrationTest {
 
         // 공지3: 작성일 2025-06-01, 첨부파일 2개
         Notice notice3 = Notice.testBuilder()
-                .member(savedMember)
+                .member(sampleMember)
                 .title("공지테스트3")
                 .content("2025-06-01 첨부파일2개 공지내용3.")
                 .startAt(LocalDateTime.of(2025, 6, 1, 0, 0))
@@ -150,7 +146,7 @@ class NoticeController_getListIntegrationTest {
                 .andExpect(jsonPath("$.data.noticeList[0].title").value("공지테스트3"))
                 .andExpect(jsonPath("$.data.noticeList[0].hasAttachment").value(true))
                 .andExpect(jsonPath("$.data.noticeList[0].viewCount").value(7))
-                .andExpect(jsonPath("$.data.noticeList[0].author.id").value(savedMember.getId().intValue()))
+                .andExpect(jsonPath("$.data.noticeList[0].author.id").value(sampleMember.getId().intValue()))
                 .andExpect(jsonPath("$.data.noticeList[0].author.name").value("테스트유저"))
 
                 // 공지2 (idx:1)

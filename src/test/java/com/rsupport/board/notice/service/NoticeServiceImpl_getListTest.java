@@ -24,7 +24,7 @@ import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 /**
- * 공재 목록 조회(검색) 서비스 단위테스트
+ * 공지 목록 조회(검색) 서비스 단위테스트
  */
 @ExtendWith(MockitoExtension.class)
 class NoticeServiceImpl_getListTest {

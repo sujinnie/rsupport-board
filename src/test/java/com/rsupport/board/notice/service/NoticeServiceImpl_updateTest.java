@@ -56,20 +56,23 @@ public class NoticeServiceImpl_updateTest {
     private LocalDateTime now;
     private LocalDateTime end;
 
+    private final Long SAMPLE_USER_ID = 1L;
+    private final Long SAMPLE_NOTICE_ID = 100L;
+
     @BeforeEach
     void setUp() { // 공통으로 사용할 더미 데이터 생성
         now = LocalDateTime.of(2025, 6, 15, 10, 0, 0);
         end = now.minusDays(1);
 
         sampleMember = Member.builder()
-                .id(1L)
+                .id(SAMPLE_USER_ID)
                 .name("테스트유저")
                 .email("update-test@example.com")
                 .password("pwd123")
                 .build();
 
         sampleNotice = Notice.testBuilder()
-                .id(100L)
+                .id(SAMPLE_NOTICE_ID)
                 .member(sampleMember)
                 .title("원본 제목")
                 .content("원본 내용")
@@ -97,8 +100,6 @@ public class NoticeServiceImpl_updateTest {
     @DisplayName("1. 수정자=작성자, 날짜 범위가 정상, 존재하는 첨부파일 1개 삭제, 새 파일 1개 추가 -> 수정 성공")
     void updateNotice_withoutFiles_success() {
         // given
-        Long userId = 1L;
-        Long noticeId = 100L;
         // 삭제할 파일 id 세팅(att1만 삭제)
         List<Long> removeIds = List.of(11L);
 
@@ -109,7 +110,7 @@ public class NoticeServiceImpl_updateTest {
 
         // 수정 요청 DTO 세팅(제목, 내용, 날짜 범위, removeAttachmentIds, newFiles)
         NoticeUpdateReqDTO req = new NoticeUpdateReqDTO();
-        req.setUserId(userId);
+        req.setUserId(SAMPLE_USER_ID);
         req.setTitle("수정된 제목");
         req.setContent("수정된 내용");
         req.setStartAt(now.plusDays(1));
@@ -118,8 +119,8 @@ public class NoticeServiceImpl_updateTest {
         req.setNewFiles(new MultipartFile[]{ newFile });
 
         // 메서드 호출 시 샘플데이터 반환하도록 세팅
-        when(memberRepository.findById(userId)).thenReturn(Optional.of(sampleMember));
-        when(noticeRepository.findWithMemberAndAttachmentsById(noticeId)).thenReturn(Optional.of(sampleNotice));
+        when(memberRepository.findById(SAMPLE_USER_ID)).thenReturn(Optional.of(sampleMember));
+        when(noticeRepository.findWithMemberAndAttachmentsById(SAMPLE_NOTICE_ID)).thenReturn(Optional.of(sampleNotice));
 
         // fileStorageService.store(...) 호출 시 새로운 Attachment 하나 반환하게 세팅(== new file)
         when(fileStorageService.store(newFile)).thenAnswer(invocation -> {
@@ -136,11 +137,11 @@ public class NoticeServiceImpl_updateTest {
         when(noticeRepository.save(any(Notice.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         // when
-        NoticeResponseDTO responseDTO = noticeService.updateNotice(userId, noticeId, req);
+        NoticeResponseDTO responseDTO = noticeService.updateNotice(SAMPLE_USER_ID, SAMPLE_NOTICE_ID, req);
 
         // then
-        verify(memberRepository, times(1)).findById(userId);
-        verify(noticeRepository, times(1)).findWithMemberAndAttachmentsById(noticeId);
+        verify(memberRepository, times(1)).findById(SAMPLE_USER_ID);
+        verify(noticeRepository, times(1)).findWithMemberAndAttachmentsById(SAMPLE_NOTICE_ID);
 
         // 삭제요청한 파일id가 attachmentRepository.deleteAllByIdIn(...) 호출에 포함되었는지 확인
         ArgumentCaptor<List<Long>> removeCaptor = ArgumentCaptor.forClass(List.class);
@@ -178,22 +179,20 @@ public class NoticeServiceImpl_updateTest {
 
     @Test
     @DisplayName("2. 시작일 > 종료일 -> INVALID_DATE_RANGE 예외 발생")
-    void updateNotice_invalidDateRange_throws() {
+    void updateNotice_invalidDateRange_throwsException() {
         // given
-        Long userId   = 1L;
-        Long noticeId = 100L;
         NoticeUpdateReqDTO req = new NoticeUpdateReqDTO();
-        req.setUserId(userId);
+        req.setUserId(SAMPLE_USER_ID);
         // startAt > endAt 으로 세팅
         req.setStartAt(now.plusDays(5));
         req.setEndAt(now.plusDays(2));
 
-        when(memberRepository.findById(userId)).thenReturn(Optional.of(sampleMember));
-        when(noticeRepository.findWithMemberAndAttachmentsById(noticeId)).thenReturn(Optional.of(sampleNotice));
+        when(memberRepository.findById(SAMPLE_USER_ID)).thenReturn(Optional.of(sampleMember));
+        when(noticeRepository.findWithMemberAndAttachmentsById(SAMPLE_NOTICE_ID)).thenReturn(Optional.of(sampleNotice));
 
         // when+then
         // 에러코드 확인
-        assertThatThrownBy(() -> noticeService.updateNotice(userId, noticeId, req))
+        assertThatThrownBy(() -> noticeService.updateNotice(SAMPLE_USER_ID, SAMPLE_NOTICE_ID, req))
                 .isInstanceOf(CustomExceptionHandler.class)
                 .extracting("errorCode")
                 .isEqualTo(ErrorCode.INVALID_DATE_RANGE);
@@ -206,21 +205,19 @@ public class NoticeServiceImpl_updateTest {
 
     @Test
     @DisplayName("3. 삭제할 파일 중 존재하지 않는 id가 있음 -> ATTACHMENT_NOT_FOUND 예외 발생")
-    void updateNotice_removeInvalidAttachment_throws() {
+    void updateNotice_removeInvalidAttachment_throwsException() {
         // given
-        Long userId   = 1L;
-        Long noticeId = 100L;
         NoticeUpdateReqDTO req = new NoticeUpdateReqDTO();
-        req.setUserId(userId);
+        req.setUserId(SAMPLE_USER_ID);
         // 존재하지 않는 파일id 삭제 요청 세팅
         req.setRemoveAttachmentIds(List.of(999L));
 
-        when(memberRepository.findById(userId)).thenReturn(Optional.of(sampleMember));
-        when(noticeRepository.findWithMemberAndAttachmentsById(noticeId)).thenReturn(Optional.of(sampleNotice));
+        when(memberRepository.findById(SAMPLE_USER_ID)).thenReturn(Optional.of(sampleMember));
+        when(noticeRepository.findWithMemberAndAttachmentsById(SAMPLE_NOTICE_ID)).thenReturn(Optional.of(sampleNotice));
 
         // when+then
         // 에러코드 확인
-        assertThatThrownBy(() -> noticeService.updateNotice(userId, noticeId, req))
+        assertThatThrownBy(() -> noticeService.updateNotice(SAMPLE_USER_ID, SAMPLE_NOTICE_ID, req))
                 .isInstanceOf(CustomExceptionHandler.class)
                 .extracting("errorCode")
                 .isEqualTo(ErrorCode.ATTACHMENT_NOT_FOUND);
@@ -231,16 +228,15 @@ public class NoticeServiceImpl_updateTest {
     }
 
     @Test
-    @DisplayName("4. 수정자 != 공지 작성자 -> ACCESS_DENIED 예외 발생")
-    void updateNotice_unauthorizedUser_throws() {
+    @DisplayName("4. 공지 존재, 수정자 != 공지 작성자 -> ACCESS_DENIED 예외 발생")
+    void updateNotice_forbiddenUser_throwsException() {
         // given
-        Long userId   = 999L; // 실제 작성자 ID는 1L
-        Long noticeId = 100L;
+        Long otherUserId   = 999L; // 실제 작성자 ID는 1L
         NoticeUpdateReqDTO req = new NoticeUpdateReqDTO();
-        req.setUserId(userId);
+        req.setUserId(otherUserId);
 
         // 샘플과 다른 유저를 반환하도록 세팅
-        when(memberRepository.findById(userId)).thenReturn(
+        when(memberRepository.findById(otherUserId)).thenReturn(
                 Optional.of(Member.builder()
                         .id(999L)
                         .name("타인")
@@ -248,11 +244,11 @@ public class NoticeServiceImpl_updateTest {
                         .password("pw")
                         .build())
         );
-        when(noticeRepository.findWithMemberAndAttachmentsById(noticeId)).thenReturn(Optional.of(sampleNotice));
+        when(noticeRepository.findWithMemberAndAttachmentsById(SAMPLE_NOTICE_ID)).thenReturn(Optional.of(sampleNotice));
 
         // when+then
         // 에러코드 확인
-        assertThatThrownBy(() -> noticeService.updateNotice(userId, noticeId, req))
+        assertThatThrownBy(() -> noticeService.updateNotice(otherUserId, SAMPLE_NOTICE_ID, req))
                 .isInstanceOf(CustomExceptionHandler.class)
                 .extracting("errorCode")
                 .isEqualTo(ErrorCode.ACCESS_DENIED);
@@ -263,20 +259,19 @@ public class NoticeServiceImpl_updateTest {
     }
 
     @Test
-    @DisplayName("5. 존재하지 않는 noticeId -> NOTICE_NOT_FOUND 예외 발생")
-    void updateNotice_notFoundNotice_throws() {
+    @DisplayName("5. 존재하지 않는 공지 -> NOTICE_NOT_FOUND 예외 발생")
+    void updateNotice_notFoundNotice_throwsException() {
         // given
-        Long userId   = 1L;
-        Long noticeId = 222L;
+        Long nonExistingNoticeId = 222L;
         NoticeUpdateReqDTO req = new NoticeUpdateReqDTO();
-        req.setUserId(userId);
+        req.setUserId(SAMPLE_USER_ID);
 
-        when(memberRepository.findById(userId)).thenReturn(Optional.of(sampleMember));
-        when(noticeRepository.findWithMemberAndAttachmentsById(noticeId)).thenReturn(Optional.empty());
+        when(memberRepository.findById(SAMPLE_USER_ID)).thenReturn(Optional.of(sampleMember));
+        when(noticeRepository.findWithMemberAndAttachmentsById(nonExistingNoticeId)).thenReturn(Optional.empty());
 
         // when+then
         // 에러코드 확인
-        assertThatThrownBy(() -> noticeService.updateNotice(userId, noticeId, req))
+        assertThatThrownBy(() -> noticeService.updateNotice(SAMPLE_USER_ID, nonExistingNoticeId, req))
                 .isInstanceOf(CustomExceptionHandler.class)
                 .extracting("errorCode")
                 .isEqualTo(ErrorCode.NOTICE_NOT_FOUND);
@@ -287,19 +282,18 @@ public class NoticeServiceImpl_updateTest {
     }
 
     @Test
-    @DisplayName("6. 존재하지 않는 userId -> MEMBER_NOT_FOUND 예외 발생")
-    void updateNotice_memberNotFound_throws() {
+    @DisplayName("6. 존재하지 않는 유저 -> MEMBER_NOT_FOUND 예외 발생")
+    void updateNotice_memberNotFound_throwsException() {
         // given
-        Long userId   = 777L;
-        Long noticeId = 100L;
+        Long nonExistingUserId = 777L;
         NoticeUpdateReqDTO req = new NoticeUpdateReqDTO();
-        req.setUserId(userId);
+        req.setUserId(nonExistingUserId);
 
-        when(memberRepository.findById(userId)).thenReturn(Optional.empty());
+        when(memberRepository.findById(nonExistingUserId)).thenReturn(Optional.empty());
 
         // when+then
         // 에러코드 확인
-        assertThatThrownBy(() -> noticeService.updateNotice(userId, noticeId, req))
+        assertThatThrownBy(() -> noticeService.updateNotice(nonExistingUserId, SAMPLE_NOTICE_ID, req))
                 .isInstanceOf(CustomExceptionHandler.class)
                 .extracting("errorCode")
                 .isEqualTo(ErrorCode.MEMBER_NOT_FOUND);

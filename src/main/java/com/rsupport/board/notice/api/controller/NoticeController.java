@@ -107,7 +107,10 @@ public class NoticeController {
                     content = @Content(schema = @Schema(implementation = ResponseDTO.class))
             )
     })
-    @GetMapping(value = "/{noticeId}", produces = MediaType.APPLICATION_JSON_VALUE + ";charset=UTF-8")
+    @GetMapping(
+            value = "/{noticeId}",
+            produces = MediaType.APPLICATION_JSON_VALUE + ";charset=UTF-8"
+    )
     public ResponseEntity<ResponseDTO<NoticeResponseDTO>> getNotice(
             @NotNull @RequestParam Long userId,
             @PathVariable Long noticeId
@@ -158,5 +161,44 @@ public class NoticeController {
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(ResponseDTO.success(res));
+    }
+
+    @Operation(summary = "공지 삭제", description = "공지를 삭제합니다. 작성자만 삭제할 수 있습니다.")
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "204", // http status 200 no content 반환
+                    description = "[NO_CONTENT] 공지 삭제가 완료되었습니다.",
+                    content = @Content(schema = @Schema(implementation = NoticeResponseDTO.class))
+            ),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "[BAD_REQUEST] userId나 noticeId가 누락된 경우",
+                    content = @Content(schema = @Schema(implementation = ResponseDTO.class))
+            ),
+            @ApiResponse(
+                    responseCode = "403",
+                    description = "[FORBIDDEN] 권한없음: 수정하려는 유저가 작성자가 아닌 경우",
+                    content = @Content(schema = @Schema(implementation = ResponseDTO.class))
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "[NOT_FOUND] 존재하지 않는 공지이거나 사용자인 경우",
+                    content = @Content(schema = @Schema(implementation = ResponseDTO.class))
+            )
+    })
+    @DeleteMapping(
+            value = "/{noticeId}",
+            produces = MediaType.APPLICATION_JSON_VALUE + ";charset=UTF-8"
+    )
+    public ResponseEntity<ResponseDTO<?>> deleteNotice(
+            @NotNull @RequestParam Long userId,
+            @PathVariable Long noticeId
+    ) {
+        log.info("DELETE /v1/notices/{}?{}", noticeId, userId);
+
+        noticeService.deleteNotice(userId, noticeId);
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(ResponseDTO.success(null));
     }
 }

@@ -25,7 +25,6 @@ import org.springframework.test.web.servlet.MockMvc;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 
-import static org.hamcrest.Matchers.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -52,10 +51,10 @@ class NoticeController_updateIntegrationTest {
     @Autowired
     private EntityManager em;
 
-    private Member savedMember;
+    private Member sampleMember;
     private Member otherMember;
-    private Notice savedNotice;
-    private Attachment savedAtt;
+    private Notice sampleNotice;
+    private Attachment sampleAtt;
 
     private final LocalDateTime now = LocalDateTime.of(2025, 6, 2, 3, 0);
 
@@ -72,7 +71,7 @@ class NoticeController_updateIntegrationTest {
                 .email("testuser@example.com")
                 .password("pwd123")
                 .build();
-        savedMember = memberRepository.save(m1);
+        sampleMember = memberRepository.save(m1);
 
         Member m2 = Member.builder()
                 .name("타인")
@@ -82,8 +81,8 @@ class NoticeController_updateIntegrationTest {
         otherMember = memberRepository.save(m2);
 
         // 공지 생성
-        savedNotice = noticeRepository.save(Notice.testBuilder()
-                .member(savedMember)
+        sampleNotice = noticeRepository.save(Notice.testBuilder()
+                .member(sampleMember)
                 .title("공지수정 통합테스트")
                 .content("공지수정 통합테스트 내용내용")
                 .startAt(now.minusDays(1))
@@ -92,11 +91,11 @@ class NoticeController_updateIntegrationTest {
                 .build());
 
         // 첨부파일
-        savedAtt = attachmentRepository.save(Attachment.testBuilder()
+        sampleAtt = attachmentRepository.save(Attachment.testBuilder()
                 .filename("att1.png")
                 .url("/uploads/att1.png")
                 .uploadedAt(now.minusDays(1))
-                .notice(savedNotice)
+                .notice(sampleNotice)
                 .build());
 
 //        savedNotice.addAttachment(savedAtt);
@@ -104,11 +103,11 @@ class NoticeController_updateIntegrationTest {
     }
 
     @Test
-    @DisplayName("1. 수정자=작성자, 날짜 범위가 정상, 존재하는 첨부파일 1개 삭제, 새 파일 1개 추가 -> 수정 성공")
+    @DisplayName("1. 수정자==작성자, 날짜 범위가 정상, 존재하는 첨부파일 1개 삭제, 새 파일 1개 추가 -> 수정 성공")
     void patchNotice_success() throws Exception {
-        Long noticeId = savedNotice.getId();
-        Long userId   = savedMember.getId();
-        Long removeAttId = savedAtt.getId(); // 삭제할 첨부파일 id
+        Long noticeId = sampleNotice.getId();
+        Long userId   = sampleMember.getId();
+        Long removeAttId = sampleAtt.getId(); // 삭제할 첨부파일 id
 
         // 새 더미파일 생성
         MockMultipartFile newFile = new MockMultipartFile(
@@ -123,7 +122,7 @@ class NoticeController_updateIntegrationTest {
                 multipart("/v1/notices/{noticeId}", noticeId)
                         .file(newFile)
                         // note: 텍스트 필드들은 param() 으로 보내야 한다
-                        .param("userId", savedMember.getId().toString())
+                        .param("userId", sampleMember.getId().toString())
                         .param("title", "수정된 제목")
                         .param("content", "수정된 내용")
                         .param("startAt", "2025-06-01T10:00:00")
@@ -150,9 +149,9 @@ class NoticeController_updateIntegrationTest {
 
     @Test
     @DisplayName("2. 시작일 > 종료일 -> 400 INVALID_DATE_RANGE 반환")
-    void patchNotice_invalidDate_throws() throws Exception {
-        Long noticeId = savedNotice.getId();
-        Long userId = savedMember.getId();
+    void patchNotice_invalidDate_throwsException() throws Exception {
+        Long noticeId = sampleNotice.getId();
+        Long userId = sampleMember.getId();
 
         MockMultipartFile dummyFile = new MockMultipartFile(
                 "newFiles",
@@ -162,7 +161,7 @@ class NoticeController_updateIntegrationTest {
         );
 
         mockMvc.perform(
-                multipart("/v1/notices/{id}", savedNotice.getId())
+                multipart("/v1/notices/{id}", sampleNotice.getId())
                         .file(dummyFile)
                         .param("userId", userId.toString())
                         .param("title", "수정된 제목")
@@ -186,9 +185,9 @@ class NoticeController_updateIntegrationTest {
 
     @Test
     @DisplayName("3. 삭제할 파일 중 존재하지 않는 id가 있음 -> 404 ATTACHMENT_NOT_FOUND 반환")
-    void patchNotice_removeInvalidAttachment_throws() throws Exception {
-        Long noticeId = savedNotice.getId();
-        Long userId = savedMember.getId();
+    void patchNotice_removeInvalidAttachment_throwsException() throws Exception {
+        Long noticeId = sampleNotice.getId();
+        Long userId = sampleMember.getId();
 
         // 존재하지 않는 첨부파일 id 세팅
         String nonExistentId = "99999";
@@ -201,7 +200,7 @@ class NoticeController_updateIntegrationTest {
         );
 
         mockMvc.perform(
-                multipart("/v1/notices/{id}", savedNotice.getId())
+                multipart("/v1/notices/{id}", sampleNotice.getId())
                         .file(dummyFile)
                         .param("userId", userId.toString())
                         .param("title", "수정된 제목")
@@ -225,8 +224,8 @@ class NoticeController_updateIntegrationTest {
 
     @Test
     @DisplayName("수정자 != 공지 작성자 ->  403 FORBIDDEN 반환")
-    void patchNotice_unauthorizedUser_throws() throws Exception {
-        Long noticeId = savedNotice.getId();
+    void patchNotice_unauthorizedUser_throwsException() throws Exception {
+        Long noticeId = sampleNotice.getId();
         Long otherUserId = otherMember.getId();
 
         MockMultipartFile dummyFile = new MockMultipartFile(
@@ -237,7 +236,7 @@ class NoticeController_updateIntegrationTest {
         );
 
         mockMvc.perform(
-                multipart("/v1/notices/{id}", savedNotice.getId())
+                multipart("/v1/notices/{id}", sampleNotice.getId())
                         .file(dummyFile)
                         .param("userId", otherUserId.toString())
                         .param("title", "수정된 제목")

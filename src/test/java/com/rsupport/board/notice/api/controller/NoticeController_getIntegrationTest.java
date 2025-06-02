@@ -47,7 +47,7 @@ public class NoticeController_getIntegrationTest {
 
     private Member sampleMember;
     private Notice sampleNotice;
-    private Attachment sampleAttachment1, sampleAttachment2;
+    private Attachment sampleAtt1, sampleAtt2;
 
     @BeforeEach
     void setUp() {
@@ -67,7 +67,6 @@ public class NoticeController_getIntegrationTest {
         // 테스트용 공지 생성
         LocalDateTime now = LocalDateTime.of(2025, 6, 10, 14, 30, 0);
         sampleNotice = Notice.testBuilder()
-                .id(0L)
                 .member(sampleMember)
                 .title("공지 상세 조회 통합테스트")
                 .content("공지 상세 조회 통합테스트 내용내용")
@@ -78,18 +77,18 @@ public class NoticeController_getIntegrationTest {
 //        sampleNotice = noticeRepository.save(sampleNotice);
 
         // 테스트용 첨부파일 2개 생성 
-        sampleAttachment1 = Attachment.builder()
+        sampleAtt1 = Attachment.builder()
                 .filename("attach1.png")
                 .url("/uploads/attach1.png")
                 .uploadedAt(now.minusHours(5))
                 .build();
-        sampleAttachment2 = Attachment.builder()
+        sampleAtt2 = Attachment.builder()
                 .filename("attach2.pdf")
                 .url("/uploads/attach2.pdf")
                 .uploadedAt(now.minusHours(3))
                 .build();
-        sampleNotice.addAttachment(sampleAttachment1);
-        sampleNotice.addAttachment(sampleAttachment2);
+        sampleNotice.addAttachment(sampleAtt1);
+        sampleNotice.addAttachment(sampleAtt2);
 
         sampleNotice = noticeRepository.save(sampleNotice);
     }
@@ -128,7 +127,7 @@ public class NoticeController_getIntegrationTest {
 
     @Test
     @DisplayName("2. userId가 존재하지 않는 경우 -> 404 MEMBER_NOT_FOUND 예외 처리")
-    void getNotice_memberNotFound() throws Exception {
+    void getNotice_memberNotFound_throwsException() throws Exception {
         Long badUserId = 9999L;
         Long noticeId = sampleNotice.getId();
 
@@ -149,7 +148,7 @@ public class NoticeController_getIntegrationTest {
 
     @Test
     @DisplayName("3. noticeId가 존재하지 않는 경우 -> 404 NOTICE_NOT_FOUND 예외처리")
-    void getNotice_noticeNotFound() throws Exception {
+    void getNotice_noticeNotFound_throwsException() throws Exception {
         Long userId = sampleMember.getId();
         Long badNoticeId = 8888L;
 

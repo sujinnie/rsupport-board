@@ -40,20 +40,22 @@ public class NoticeServiceImpl_getTest {
     private Member sampleMember;
     private Notice sampleNotice;
     private Notice refreshedNotice;
+    private final Long SAMPLE_USER_ID = 1L;
+    private final Long SAMPLE_NOTICE_ID = 100L;
 
     @BeforeEach
     void setUp() { // 공통으로 사용할 더미 데이터 생성
         LocalDateTime baseTime = LocalDateTime.of(2025, 6, 10, 12, 0, 0);
 
         sampleMember = Member.builder()
-                .id(1L)
+                .id(SAMPLE_USER_ID)
                 .name("테스트유저")
                 .email("read-test@example.com")
                 .password("pwd123")
                 .build();
 
         sampleNotice = Notice.testBuilder()
-                .id(100L)
+                .id(SAMPLE_NOTICE_ID)
                 .title("공지상세조회테스트")
                 .content("공지상세조회테스트 내용내용")
                 .startAt(baseTime.minusDays(1))
@@ -71,8 +73,8 @@ public class NoticeServiceImpl_getTest {
                 .build();
         sampleNotice.addAttachment(att);
 
-        refreshedNotice = Notice.testBuilder()
-                .id(100L)
+        refreshedNotice = Notice.testBuilder() // 조회수만 증가된 notice
+                .id(SAMPLE_NOTICE_ID)
                 .title("공지상세조회테스트")
                 .content("공지상세조회테스트 내용내용")
                 .startAt(baseTime.minusDays(1))
@@ -82,13 +84,7 @@ public class NoticeServiceImpl_getTest {
                 .createdAt(baseTime.minusDays(2))
                 .updatedAt(baseTime.minusDays(2))
                 .build();
-        Attachment att2 = Attachment.testBuilder()
-                .id(55L)
-                .filename("file1.txt")
-                .url("/uploads/file1.txt")
-                .uploadedAt(baseTime.minusDays(1))
-                .build();
-        refreshedNotice.addAttachment(att2);
+        refreshedNotice.addAttachment(att);
     }
 
     @Test
@@ -96,27 +92,27 @@ public class NoticeServiceImpl_getTest {
     void getNotice_success() {
         // given
         // 호출 시 생성해둔 샘플 데이터 반환
-        when(memberRepository.findById(1L)).thenReturn(Optional.of(sampleMember));
-        when(noticeRepository.findWithMemberAndAttachmentsById(100L)).thenReturn(Optional.of(sampleNotice));
-        when(noticeRepository.findWithMemberAndAttachmentsById(100L)).thenReturn(Optional.of(refreshedNotice));
+        when(memberRepository.findById(SAMPLE_USER_ID)).thenReturn(Optional.of(sampleMember));
+        when(noticeRepository.findWithMemberAndAttachmentsById(SAMPLE_NOTICE_ID)).thenReturn(Optional.of(sampleNotice));
+        when(noticeRepository.findWithMemberAndAttachmentsById(SAMPLE_NOTICE_ID)).thenReturn(Optional.of(refreshedNotice));
 
         // when
-        NoticeResponseDTO dto = noticeService.getNotice(1L, 100L);
+        NoticeResponseDTO dto = noticeService.getNotice(SAMPLE_USER_ID, SAMPLE_NOTICE_ID);
 
         // then
         // 메서드 호출 검증
-        verify(memberRepository, times(1)).findById(1L);
-        verify(noticeRepository, times(1)).incrementViewCountOnly(100L);
+        verify(memberRepository, times(1)).findById(SAMPLE_USER_ID);
+        verify(noticeRepository, times(1)).incrementViewCountOnly(SAMPLE_NOTICE_ID);
         // 조회수 증가 전, 후 두 번 호출된거 확인
-        verify(noticeRepository, times(2)).findWithMemberAndAttachmentsById(100L);
+        verify(noticeRepository, times(2)).findWithMemberAndAttachmentsById(SAMPLE_NOTICE_ID);
 
         // 최종 응답 DTO 검증
         assertThat(dto).isNotNull();
-        assertThat(dto.getId()).isEqualTo(100L);
+        assertThat(dto.getId()).isEqualTo(SAMPLE_NOTICE_ID);
         assertThat(dto.getTitle()).isEqualTo("공지상세조회테스트");
         assertThat(dto.getContent()).isEqualTo("공지상세조회테스트 내용내용");
         assertThat(dto.getViewCount()).isEqualTo(6L);
-        assertThat(dto.getAuthor().getId()).isEqualTo(1L);
+        assertThat(dto.getAuthor().getId()).isEqualTo(SAMPLE_USER_ID);
         assertThat(dto.getAttachments()).hasSize(1);
         assertThat(dto.getAttachments().get(0).getFilename()).isEqualTo("file1.txt");
     }
@@ -125,10 +121,11 @@ public class NoticeServiceImpl_getTest {
     @DisplayName("2. 존재하지 않는 userId -> MEMBER_NOT_FOUND 예외 발생")
     void getNotice_memberNotFound() {
         // given
-        when(memberRepository.findById(1L)).thenReturn(Optional.empty());
+        Long nonExistingUserId = 2L;
+        when(memberRepository.findById(nonExistingUserId)).thenReturn(Optional.empty());
 
         // when+then
-        assertThatThrownBy(() -> noticeService.getNotice(1L, 100L))
+        assertThatThrownBy(() -> noticeService.getNotice(nonExistingUserId, SAMPLE_NOTICE_ID))
                 .isInstanceOf(CustomExceptionHandler.class)
                 .extracting("errorCode")
                 .isEqualTo(ErrorCode.MEMBER_NOT_FOUND);
@@ -142,11 +139,12 @@ public class NoticeServiceImpl_getTest {
     @DisplayName("3. 존재하지 않는 noticeId -> NOTICE_NOT_FOUND 예외 발생")
     void getNotice_noticeNotFound() {
         // given
-        when(memberRepository.findById(1L)).thenReturn(Optional.of(sampleMember));
-        when(noticeRepository.findWithMemberAndAttachmentsById(100L)).thenReturn(Optional.empty());
+        Long NonExistingNoticeId = 101L;
+        when(memberRepository.findById(SAMPLE_USER_ID)).thenReturn(Optional.of(sampleMember));
+        when(noticeRepository.findWithMemberAndAttachmentsById(NonExistingNoticeId)).thenReturn(Optional.empty());
 
         // when+then
-        assertThatThrownBy(() -> noticeService.getNotice(1L, 100L))
+        assertThatThrownBy(() -> noticeService.getNotice(SAMPLE_USER_ID, NonExistingNoticeId))
                 .isInstanceOf(CustomExceptionHandler.class)
                 .extracting("errorCode")
                 .isEqualTo(ErrorCode.NOTICE_NOT_FOUND);

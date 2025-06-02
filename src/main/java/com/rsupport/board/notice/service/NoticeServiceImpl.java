@@ -21,6 +21,7 @@ import org.springframework.data.domain.Pageable;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -136,7 +137,7 @@ public class NoticeServiceImpl implements NoticeService {
     @Override
     @Transactional
     public NoticeResponseDTO getNotice(Long userId, Long noticeId) {
-        // 작성자 예외처리 (유저만 공지 등록 가능)
+        // 작성자 예외처리 (유저만 공지 조회 가능)
         Member member = memberRepository.findById(userId)
                 .orElseThrow(()-> new CustomExceptionHandler(ErrorCode.MEMBER_NOT_FOUND));
 
@@ -153,6 +154,9 @@ public class NoticeServiceImpl implements NoticeService {
         return convertToResDTO(refreshed);
     }
 
+    /**
+     * 공지 수정 서비스 (update)
+     */
     @Override
     @Transactional
     public NoticeResponseDTO updateNotice(Long userId, Long noticeId, NoticeUpdateReqDTO req) {
@@ -229,5 +233,27 @@ public class NoticeServiceImpl implements NoticeService {
 
         // 응답 DTO로 변환
         return convertToResDTO(updatedNotice);
+    }
+
+    /**
+     * 공지 삭제 조회 서비스 (delete)
+     */
+    public void deleteNotice(Long userId, Long noticeId) {
+        // 작성자 예외처리1 (회원여부)
+        Member member = memberRepository.findById(userId)
+                .orElseThrow(()-> new CustomExceptionHandler(ErrorCode.MEMBER_NOT_FOUND));
+
+        // 공지 조회 예외처리
+        Notice notice = noticeRepository.findById(noticeId)
+                .orElseThrow(()-> new CustomExceptionHandler(ErrorCode.NOTICE_NOT_FOUND));
+
+        // 작성자 예외처리2 (작성자만 삭제 가능)
+        if (!userId.equals(notice.getMember().getId())) {
+            throw new CustomExceptionHandler(ErrorCode.ACCESS_DENIED);
+        }
+
+        // 삭제
+//        attachmentRepository.deleteAllByNoticeId(noticeId);
+        noticeRepository.delete(notice);
     }
 }
