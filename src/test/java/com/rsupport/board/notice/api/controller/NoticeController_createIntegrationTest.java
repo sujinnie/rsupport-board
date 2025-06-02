@@ -27,7 +27,7 @@ class NoticeController_createIntegrationTest {
 
     @Test
     @DisplayName("1. 공지 생성 시 제목이 비어 있으면 400 에러 반환, @Valid 검증")
-    void createNotice_titleBlank_returnsBadRequest() throws Exception {
+    void createNotice_titleBlank_badRequest_throwsException() throws Exception {
         mockMvc.perform(
                     multipart("/v1/notices")
                         // note: 텍스트 필드들은 param() 으로 보내야 한다

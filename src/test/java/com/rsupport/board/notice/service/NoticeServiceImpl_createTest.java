@@ -29,7 +29,7 @@ import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 /**
- * 공재 생성 서비스 단위테스트
+ * 공지 생성 서비스 단위테스트
  */
 @ExtendWith(MockitoExtension.class)
 class NoticeServiceImpl_createTest {
@@ -51,13 +51,15 @@ class NoticeServiceImpl_createTest {
     private Member sampleMember;
     private LocalDateTime now, end;
 
+    private final Long SAMPLE_USER_ID = 1L;
+
     @BeforeEach
     void setUp() { // 공통으로 사용할 더미 데이터 생성
         now = LocalDateTime.of(2025, 6, 15, 10, 0, 0);
-        end = now.minusDays(1);
+        end = now.plusDays(3);
 
         sampleMember = Member.builder()
-                .id(1L)
+                .id(SAMPLE_USER_ID)
                 .name("테스트유저")
                 .email("create-test@example.com")
                 .password("pwd123")
@@ -69,16 +71,16 @@ class NoticeServiceImpl_createTest {
     void createNotice_withoutFiles_success() {
         // given
         NoticeCreateReqDTO req = NoticeCreateReqDTO.builder()
-                .userId(1L)
+                .userId(SAMPLE_USER_ID)
                 .title("공지생성 테스트1 - 파일없음")
                 .content("첨부파일 없는 공지 생성 테스트")
                 .startAt(now)
-                .endAt(now.plusDays(7))
+                .endAt(end)
                 .files(null)  // 첨부파일 없음
                 .build();
 
         // 생성한 샘플 유저를 반환하도록 세팅
-        when(memberRepository.findById(1L)).thenReturn(Optional.of(sampleMember));
+        when(memberRepository.findById(SAMPLE_USER_ID)).thenReturn(Optional.of(sampleMember));
         
         // 서비스 로직이 Notice를 저장한 뒤 id=100L이 붙었다고 세팅
         when(noticeRepository.save(any(Notice.class))).thenAnswer(invocation -> {
@@ -90,9 +92,9 @@ class NoticeServiceImpl_createTest {
         // when
         NoticeResponseDTO responseDTO = noticeService.createNotice(req);
 
-        ////// then //////
+        // then
         // 작성자 조회 검증
-        verify(memberRepository, times(1)).findById(1L);
+        verify(memberRepository, times(1)).findById(SAMPLE_USER_ID);
 
         // noticeRepository.save(...) 호출 여부 검증
         ArgumentCaptor<Notice> noticeCaptor = ArgumentCaptor.forClass(Notice.class);
@@ -104,7 +106,7 @@ class NoticeServiceImpl_createTest {
         assertThat(savedNotice.getTitle()).isEqualTo("공지생성 테스트1 - 파일없음");
         assertThat(savedNotice.getContent()).isEqualTo("첨부파일 없는 공지 생성 테스트");
         assertThat(savedNotice.getStartAt()).isEqualTo(now);
-        assertThat(savedNotice.getEndAt()).isEqualTo(now.plusDays(7));
+        assertThat(savedNotice.getEndAt()).isEqualTo(end);
         assertThat(savedNotice.getAttachments()).isEmpty(); // 첨부파일이 없는 시나리오 -> attachments 리스트가 비어 있어야함
 
         // 최종 응답 DTO 검증
@@ -112,7 +114,7 @@ class NoticeServiceImpl_createTest {
         assertThat(responseDTO.getId()).isEqualTo(100L);
         assertThat(responseDTO.getTitle()).isEqualTo("공지생성 테스트1 - 파일없음");
         assertThat(responseDTO.getContent()).isEqualTo("첨부파일 없는 공지 생성 테스트");
-        assertThat(responseDTO.getAuthor().getId()).isEqualTo(1L);
+        assertThat(responseDTO.getAuthor().getId()).isEqualTo(SAMPLE_USER_ID);
         assertThat(responseDTO.getAuthor().getName()).isEqualTo("테스트유저");
         assertThat(responseDTO.getAttachments()).isEmpty();
     }
@@ -129,15 +131,15 @@ class NoticeServiceImpl_createTest {
         when(file2.isEmpty()).thenReturn(false);
 
         NoticeCreateReqDTO req = NoticeCreateReqDTO.builder()
-                .userId(1L)
+                .userId(SAMPLE_USER_ID)
                 .title("공지생성 테스트2 - 파일여러개")
                 .content("첨부파일 여러개 생성 테스트")
                 .startAt(now)
-                .endAt(now.plusDays(3))
+                .endAt(end)
                 .files(new MultipartFile[]{file1, file2})
                 .build();
 
-        when(memberRepository.findById(1L)).thenReturn(Optional.of(sampleMember));
+        when(memberRepository.findById(SAMPLE_USER_ID)).thenReturn(Optional.of(sampleMember));
 
         // note: thenAnswer
         // FileStorageService.store(...)가 호출될 때마다 다른 Attachment를 반환하도록 세팅
@@ -173,7 +175,7 @@ class NoticeServiceImpl_createTest {
 
         // then
         // 작성자 조회 검증
-        verify(memberRepository, times(1)).findById(1L);
+        verify(memberRepository, times(1)).findById(SAMPLE_USER_ID);
 
         // 파일 저장 서비스가 2번 호출되었는지 검증
         verify(fileStorageService, times(1)).store(file1);
@@ -189,7 +191,7 @@ class NoticeServiceImpl_createTest {
         assertThat(savedNotice.getTitle()).isEqualTo("공지생성 테스트2 - 파일여러개");
         assertThat(savedNotice.getContent()).isEqualTo("첨부파일 여러개 생성 테스트");
         assertThat(savedNotice.getStartAt()).isEqualTo(now);
-        assertThat(savedNotice.getEndAt()).isEqualTo(now.plusDays(3));
+        assertThat(savedNotice.getEndAt()).isEqualTo(end);
         
         // 저장된 Notice의 첨부파일 리스트 크기 확인 -> 2
         assertThat(savedNotice.getAttachments()).hasSize(2);
@@ -209,7 +211,7 @@ class NoticeServiceImpl_createTest {
         assertThat(responseDTO.getId()).isEqualTo(200L);
         assertThat(responseDTO.getTitle()).isEqualTo("공지생성 테스트2 - 파일여러개");
         assertThat(responseDTO.getContent()).isEqualTo("첨부파일 여러개 생성 테스트");
-        assertThat(responseDTO.getAuthor().getId()).isEqualTo(1L);
+        assertThat(responseDTO.getAuthor().getId()).isEqualTo(SAMPLE_USER_ID);
         assertThat(responseDTO.getAuthor().getName()).isEqualTo("테스트유저");
         assertThat(responseDTO.getAttachments()).hasSize(2);
 
@@ -236,7 +238,7 @@ class NoticeServiceImpl_createTest {
                 .title("공지생성 테스트3 - 존재하지 않는 유저")
                 .content("존재하지 않는 유저 테스트")
                 .startAt(now)
-                .endAt(now.plusDays(1))
+                .endAt(end)
                 .files(null)
                 .build();
 
@@ -255,15 +257,15 @@ class NoticeServiceImpl_createTest {
     void createNotice_invalidDateRange_throwsException() {
         // given
         NoticeCreateReqDTO req = NoticeCreateReqDTO.builder()
-                .userId(1L)
+                .userId(SAMPLE_USER_ID)
                 .title("공지생성 테스트4 - 종료일이 시작일보다 빠를때")
                 .content("시작일<종료일 테스트")
                 .startAt(now)
-                .endAt(end)
+                .endAt(now.minusDays(2)) // 시작일 < 종료일로 세팅
                 .files(null)
                 .build();
 
-        when(memberRepository.findById(1L)).thenReturn(Optional.of(sampleMember));
+        when(memberRepository.findById(SAMPLE_USER_ID)).thenReturn(Optional.of(sampleMember));
 
         // when+then
         assertThatThrownBy(() -> noticeService.createNotice(req))
