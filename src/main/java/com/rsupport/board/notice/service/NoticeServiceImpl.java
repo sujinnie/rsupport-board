@@ -164,11 +164,6 @@ public class NoticeServiceImpl implements NoticeService {
         Notice notice = noticeRepository.findWithMemberAndAttachmentsById(noticeId)
                 .orElseThrow(()-> new CustomExceptionHandler(ErrorCode.NOTICE_NOT_FOUND));
 
-//        // 조회수 증가
-//        noticeRepository.incrementViewCountOnly(noticeId);
-//        Notice refreshed = noticeRepository.findWithMemberAndAttachmentsById(noticeId)
-//                .orElseThrow(()-> new CustomExceptionHandler(ErrorCode.NOTICE_NOT_FOUND));
-
         // 조회수 증가: redis INCR로 변경!!
         String redisKey = "notice:view:" + noticeId;
         //  redis에 키가 없으면 0에서 시작, 있으면 1씩 증가

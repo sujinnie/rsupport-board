@@ -15,11 +15,4 @@ import java.util.List;
 public interface NoticeRepository extends JpaRepository<Notice, Long>, NoticeRepositoryCustom {
     // 조회 테스트 용
     List<Notice> findAllByOrderByCreatedAtDesc();
-
-    // 조회수만 증가(updatedAt 갱신 x)
-    // todo: 조회수가 커지면 ...캐싱..?
-    @Modifying(clearAutomatically = true) // 영속성 초기화
-    @Query("UPDATE Notice n SET n.viewCount = n.viewCount + 1 WHERE n.id = :id")
-    void incrementViewCountOnly(@Param("id") Long id);
-
 }
