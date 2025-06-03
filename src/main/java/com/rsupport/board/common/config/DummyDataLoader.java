@@ -1,5 +1,6 @@
 package com.rsupport.board.common.config;
 
+import com.rsupport.board.common.utils.KoreanTitleUtil;
 import lombok.RequiredArgsConstructor;
 import net.datafaker.Faker;
 import org.springframework.beans.factory.annotation.Value;
@@ -27,7 +28,7 @@ import java.util.*;
  *
  * 더미 데이터 내용
  * - member 테이블: 100,000건
- * - notice 테이블: 100,000건
+ * - notice 테이블: 500,000건
  * - notice_attachment 테이블: 공지당 0~3개 랜덤 첨부파일 (샘플 파일을 upload.path 아래로 복사..)
  */
 @Component
@@ -154,7 +155,7 @@ public class DummyDataLoader implements CommandLineRunner {
 
         for (int i = 1; i <= totalNotices; i++) {
             // DataFaker로 제목, 내용 랜덤 생성
-            String title   = faker.book().title();
+            String title = KoreanTitleUtil.randomKoreanTitle();
             String content = faker.lorem().paragraph(3);
 
             // userId: 생성된 userId 중에서 랜덤

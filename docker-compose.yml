@@ -1,6 +1,7 @@
 version: '3.8'
 
 services:
+  # mysql
   mysql:
     image: mysql:8.0
     container_name: rsupport-mysql
@@ -15,6 +16,19 @@ services:
       - mysql_data:/var/lib/mysql
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # redis
+  redis:
+    image: redis:7.0-alpine
+    container_name: rsboard-redis
+    ports:
+      - "6379:6379"
+    command: ["redis-server", "--appendonly", "yes", "--requirepass", "rsboard_sujin_redis333"]
+    healthcheck:
+      test: [ "CMD", "redis-cli", "-a", "rsboard_sujin_redis333", "ping" ]
       interval: 10s
       timeout: 5s
       retries: 5

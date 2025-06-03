@@ -7,6 +7,7 @@ import com.rsupport.board.notice.domain.entity.Notice;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+import java.util.Map;
 import java.util.Optional;
 
 public interface NoticeRepositoryCustom {
@@ -26,4 +27,11 @@ public interface NoticeRepositoryCustom {
      * @return 공지
      */
     Optional<Notice> findWithMemberAndAttachmentsById(Long noticeId);
+
+    /**
+     * 배치 주기동안 누적된 조회수 반영
+     *
+     * @param viewIncrementCnt 배치 주기동안 쌓인 공지-조회수 정보
+     */
+    void batchIncreaseViewCount(Map<Long, Long> viewIncrementCnt);
 }

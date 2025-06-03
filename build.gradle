@@ -44,6 +44,12 @@ dependencies {
 	annotationProcessor "jakarta.annotation:jakarta.annotation-api"
 	annotationProcessor "jakarta.persistence:jakarta.persistence-api"
 
+	// spring data cache + redis
+	implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+	implementation 'org.springframework.boot:spring-boot-starter-cache'
+	implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310' // JavaTimeModule
+	implementation 'com.fasterxml.jackson.core:jackson-databind' // Json객체 직렬화/역직렬화, 복잡한 DTO 캐싱 시 편리
+
 	compileOnly 'org.projectlombok:lombok'
 	runtimeOnly 'com.mysql:mysql-connector-j'
 	annotationProcessor 'org.projectlombok:lombok'
