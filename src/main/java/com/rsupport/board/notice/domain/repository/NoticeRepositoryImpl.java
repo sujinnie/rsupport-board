@@ -21,6 +21,7 @@ import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -38,18 +39,68 @@ public class NoticeRepositoryImpl implements NoticeRepositoryCustom {
 
     /**
      * 공지 목록 조회 쿼리 (검색+페이지네이션)
+     * - 제목+내용(titleOnly=false)인 경우에는
+     * - 제목에서 키워드 먼저 찾고
+     * - 제목에서 찾아진 결과들을 제외한 범위에서 내용 검색 하도록 분기
      */
     @Override
     public Page<NoticeListItemDTO> findAllBySearchCondition(NoticeListReqDTO req, Pageable pageable) {
-        // where 절에 사용될 조건
-        BooleanExpression searchConds = buildSearchCondition(req);
+        String keyword = (req.getKeyword() != null) ? req.getKeyword().trim() : null;
+        Boolean titleOnly = req.getTitleOnly();
 
-        // 조회 쿼리
-        List<NoticeListItemDTO> noticeList = queryFactory
+        // 1. 키워드가 없거나 titleOnly=true 인경우
+        if(keyword == null || keyword.isEmpty() || Boolean.TRUE.equals(titleOnly)) {
+            BooleanExpression searchConds = buildSearchCondition(req);
+
+            // 조회 쿼리
+            List<NoticeListItemDTO> noticeList = queryFactory
+                    .select(new QNoticeListItemDTO(
+                            notice.id,
+                            notice.title,
+                            // hasAttachment : attachment크기체크
+                            Expressions.cases()
+                                    .when(attachment.id.isNotNull())
+                                    .then(true)
+                                    .otherwise(false),
+                            notice.createdAt,
+                            notice.startAt,
+                            notice.endAt,
+                            notice.viewCount,
+                            notice.member.id,
+                            notice.member.name
+                    ))
+                    .distinct()
+                    .from(notice)
+                    .leftJoin(notice.attachments, attachment)
+                    .where(searchConds)
+                    .offset(pageable.getOffset())
+                    .limit(pageable.getPageSize())
+                    .orderBy(notice.createdAt.desc())
+                    .fetch();
+
+            Long _total = queryFactory
+                    .select(notice.count())
+                    .from(notice)
+                    .where(searchConds)
+                    .fetchOne();
+
+            long total = (_total != null) ? _total : 0L;
+
+            return new PageImpl<>(noticeList, pageable, total);
+        }
+
+        // 2. 재목+내용(titleOnly = false) 인 경우 (제목 먼저 조회하고 나머지에서 내용 조회)
+        // 2-1. 제목에 키워드 포함 + 범위조회
+        BooleanExpression rangeCondition = buildRangeCondition(req);
+        BooleanExpression titleCondition = notice.title.containsIgnoreCase(keyword);
+        if (rangeCondition != null) {
+            titleCondition = titleCondition.and(rangeCondition);
+        }
+
+        List<NoticeListItemDTO> titleMatchedList = queryFactory
                 .select(new QNoticeListItemDTO(
                         notice.id,
                         notice.title,
-                        // hasAttachment : attachment크기체크
                         Expressions.cases()
                                 .when(attachment.id.isNotNull())
                                 .then(true)
@@ -64,21 +115,88 @@ public class NoticeRepositoryImpl implements NoticeRepositoryCustom {
                 .distinct()
                 .from(notice)
                 .leftJoin(notice.attachments, attachment)
-                .where(searchConds)
-                .offset(pageable.getOffset())
-                .limit(pageable.getPageSize())
+                .where(titleCondition)
                 .orderBy(notice.createdAt.desc())
                 .fetch();
 
-        Long _total = queryFactory
-                .select(notice.count())
+        long titleCount = titleMatchedList.size();
+
+        // 2-2. 제목에 있던 공지 제외 + 내용에 키워드 포함 + 범위조건
+        BooleanExpression contentOnlyCond = notice.content.containsIgnoreCase(keyword)
+                .and(notice.title.containsIgnoreCase(keyword).not());
+        if (rangeCondition != null) {
+            contentOnlyCond = contentOnlyCond.and(rangeCondition);
+        }
+
+        List<NoticeListItemDTO> contentMatchedList = queryFactory
+                .select(new QNoticeListItemDTO(
+                        notice.id,
+                        notice.title,
+                        Expressions.cases()
+                                .when(attachment.id.isNotNull())
+                                .then(true)
+                                .otherwise(false),
+                        notice.createdAt,
+                        notice.startAt,
+                        notice.endAt,
+                        notice.viewCount,
+                        notice.member.id,
+                        notice.member.name
+                ))
+                .distinct()
                 .from(notice)
-                .where(searchConds)
-                .fetchOne();
+                .leftJoin(notice.attachments, attachment)
+                .where(contentOnlyCond)
+                .orderBy(notice.createdAt.desc())
+                .fetch();
 
-        long total = (_total != null) ? _total : 0L;
+        long contentCount = contentMatchedList.size();
 
-        return new PageImpl<>(noticeList, pageable, total);
+        // 2-3) 두 리스트(titleMatchedList, contentMatchedList) 합치기
+        List<NoticeListItemDTO> combined = new ArrayList<>(titleMatchedList.size() + contentMatchedList.size());
+        combined.addAll(titleMatchedList);
+        combined.addAll(contentMatchedList);
+
+        // 2-4) 자바 레벨에서 “createdAt DESC” 다시 정렬
+        combined.sort((a, b) -> b.getCreatedAt().compareTo(a.getCreatedAt()));
+
+        // 2-5) page, size에 맞춰 자바 레벨 페이지네이션 (서브리스트)
+        int offset = (int) pageable.getOffset();
+        int pageSize = pageable.getPageSize();
+        int endIndex = Math.min(offset + pageSize, combined.size());
+
+        List<NoticeListItemDTO> pageContent;
+        if (offset >= combined.size()) {
+            pageContent = List.of();
+        } else {
+            pageContent = combined.subList(offset, endIndex);
+        }
+
+        // 2-6) 전체 건수 = titleCount + contentCount
+        long total = titleCount + contentCount;
+
+        return new PageImpl<>(pageContent, pageable, total);
+    }
+
+    /**
+     * 공지목록 조회 시 요청된 검색범위 조건절 만들기
+     */
+    private BooleanExpression buildRangeCondition(NoticeListReqDTO req) {
+        BooleanExpression result = null;
+
+        // 등록일 검색 (fromDate ~ toDate)
+        if (req.getFromDate() != null) {
+            LocalDateTime fromDateTime = req.getFromDate().atStartOfDay(); // 00:00
+            BooleanExpression fromDate = notice.startAt.goe(fromDateTime);
+            result = (result == null ? fromDate : result.and(fromDate));
+        }
+        if (req.getToDate() != null) {
+            LocalDateTime toDateTime = req.getToDate().atTime(LocalTime.MAX); // 23:59
+            BooleanExpression toDate = notice.endAt.loe(toDateTime);
+            result = (result == null ? toDate : result.and(toDate));
+        }
+
+        return result;
     }
 
     /**
@@ -104,12 +222,12 @@ public class NoticeRepositoryImpl implements NoticeRepositoryCustom {
         // 등록일 검색 (fromDate ~ toDate)
         if (req.getFromDate() != null) {
             LocalDateTime fromDateTime = req.getFromDate().atStartOfDay(); // 00:00
-            BooleanExpression fromDate = notice.createdAt.goe(fromDateTime);
+            BooleanExpression fromDate = notice.startAt.goe(fromDateTime);
             result = (result == null ? fromDate : result.and(fromDate));
         }
         if (req.getToDate() != null) {
             LocalDateTime toDateTime = req.getToDate().atTime(LocalTime.MAX); // 23:59
-            BooleanExpression toDate = notice.createdAt.loe(toDateTime);
+            BooleanExpression toDate = notice.endAt.loe(toDateTime);
             result = (result == null ? toDate : result.and(toDate));
         }
 

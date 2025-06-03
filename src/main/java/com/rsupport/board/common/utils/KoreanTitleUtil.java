@@ -39,7 +39,7 @@ public class KoreanTitleUtil {
         String adj = ADJECTIVES[rnd.nextInt(ADJECTIVES.length)];
         String noun = NOUNS[rnd.nextInt(NOUNS.length)];
         String verb = VERB_ENDINGS[rnd.nextInt(VERB_ENDINGS.length)];
-        return adj + " " + noun + " " + verb + " " + randomHangulString(3)+3;
+        return adj + " " + noun + " " + verb + " " + randomHangulString(rnd.nextInt(2)+2);
     }
 
     public static void main(String[] args) {
