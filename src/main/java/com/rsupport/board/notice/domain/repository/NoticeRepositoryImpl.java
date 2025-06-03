@@ -1,5 +1,7 @@
 package com.rsupport.board.notice.domain.repository;
 
+import com.querydsl.core.types.OrderSpecifier;
+import com.rsupport.board.common.utils.QueryDslSortUtil;
 import com.rsupport.board.member.domain.entity.Member;
 import com.rsupport.board.member.domain.entity.QMember;
 import com.rsupport.board.notice.api.dto.NoticeListItemDTO;
@@ -80,7 +82,7 @@ public class NoticeRepositoryImpl implements NoticeRepositoryCustom {
                     .where(searchConds)
                     .offset(pageable.getOffset())
                     .limit(pageable.getPageSize())
-                    .orderBy(notice.createdAt.desc())
+                    .orderBy(buildOrderCondition(pageable))
                     .fetch();
 
             Long _total = queryFactory
@@ -121,7 +123,7 @@ public class NoticeRepositoryImpl implements NoticeRepositoryCustom {
                 .from(notice)
                 .leftJoin(notice.attachments, attachment)
                 .where(titleCondition)
-                .orderBy(notice.createdAt.desc())
+                .orderBy(buildOrderCondition(pageable))
                 .fetch();
 
         long titleCount = titleMatchedList.size();
@@ -152,7 +154,7 @@ public class NoticeRepositoryImpl implements NoticeRepositoryCustom {
                 .from(notice)
                 .leftJoin(notice.attachments, attachment)
                 .where(contentOnlyCond)
-                .orderBy(notice.createdAt.desc())
+                .orderBy(buildOrderCondition(pageable))
                 .fetch();
 
         long contentCount = contentMatchedList.size();
@@ -237,6 +239,18 @@ public class NoticeRepositoryImpl implements NoticeRepositoryCustom {
         }
 
         return result;
+    }
+
+    /**
+     * 공지 목록 조회 시 정렬 조건 만들기
+     */
+    private OrderSpecifier<?>[] buildOrderCondition(Pageable pageable) {
+        // Sort 가 없을 때는 createAt, DESC 를 default 로 반환
+        if (pageable.getSort() == null || pageable.getSort().isEmpty()) {
+            return new OrderSpecifier<?>[]{ notice.createdAt.desc() };
+        }
+
+        return QueryDslSortUtil.getOrderConds(pageable.getSort(), Notice.class);
     }
 
     /**
