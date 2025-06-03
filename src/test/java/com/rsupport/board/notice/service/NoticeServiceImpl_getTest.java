@@ -101,9 +101,6 @@ public class NoticeServiceImpl_getTest {
         // then
         // 메서드 호출 검증
         verify(memberRepository, times(1)).findById(SAMPLE_USER_ID);
-//        verify(noticeRepository, times(1)).incrementViewCountOnly(SAMPLE_NOTICE_ID);
-//        // 조회수 증가 전, 후 두 번 호출된거 확인
-//        verify(noticeRepository, times(2)).findWithMemberAndAttachmentsById(SAMPLE_NOTICE_ID);
 
         // redis opsForValue -> increment -> get 순서로 호출됐는지 확인
         InOrder inOrder = inOrder(redisTemplate, valueOperations);
@@ -141,9 +138,6 @@ public class NoticeServiceImpl_getTest {
         // then
         // 메서드 호출 검증
         verify(memberRepository, times(1)).findById(SAMPLE_USER_ID);
-//        verify(noticeRepository, times(1)).incrementViewCountOnly(SAMPLE_NOTICE_ID);
-//        // 조회수 증가 전, 후 두 번 호출된거 확인
-//        verify(noticeRepository, times(2)).findWithMemberAndAttachmentsById(SAMPLE_NOTICE_ID);
 
         // redis opsForValue -> increment -> get 순서로 호출됐는지 확인
         InOrder inOrder = inOrder(redisTemplate, valueOperations);
@@ -197,8 +191,5 @@ public class NoticeServiceImpl_getTest {
 
         // redis 는 아예 호출되지 않아야함
         verify(redisTemplate, never()).opsForValue();
-
-        // 조회수 증가는 호출되지 않아야 함
-//        verify(noticeRepository, never()).incrementViewCountOnly(anyLong());
     }
 }
