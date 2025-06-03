@@ -12,6 +12,10 @@ import com.rsupport.board.notice.domain.repository.NoticeRepository;
 import com.rsupport.board.notice.infra.FileStorageService;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.data.redis.core.ReactiveRedisOperations;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
@@ -32,12 +36,18 @@ public class NoticeServiceImpl implements NoticeService {
     private final NoticeRepository noticeRepository;
     private final AttachmentRepository attachmentRepository;
     private final FileStorageService fileStorageService;
+    private final RedisTemplate<String, Long> redisTemplate;
 
     /**
      * 공지 등록 서비스 (create)
      */
     @Override
     @Transactional
+    @CacheEvict( // 새로운 공지 등록되면 캐싱해놨던 조회목록 초기화 해야함
+            value = "latestNotices", // 같은 캐시 이름
+            key = "'getNoticeList_0-20'", // 캐시 키 고정
+            beforeInvocation = false // 메서드가 성공한 뒤에 캐시 삭제
+    )
     public NoticeResponseDTO createNotice(NoticeCreateReqDTO req) {
         // 작성자 예외처리 (유저만 공지 등록 가능)
         Member author = memberRepository.findById(req.getUserId())
@@ -91,6 +101,10 @@ public class NoticeServiceImpl implements NoticeService {
                 ))
                 .toList();
 
+        // 조회수는 db값 + redis 에 캐싱된 값
+         Long redisDelta = Optional.ofNullable(redisTemplate.opsForValue().get("notice:view:" + notice.getId())).orElse(0L);
+         long totalViewCount = notice.getViewCount() + redisDelta;
+
         return new NoticeResponseDTO(
                 notice.getId(),
                 notice.getTitle(),
@@ -99,7 +113,7 @@ public class NoticeServiceImpl implements NoticeService {
                 notice.getEndAt(),
                 notice.getCreatedAt(),
                 notice.getUpdatedAt(),
-                (long) notice.getViewCount(),
+                totalViewCount,
                 author,
                 attachments
         );
@@ -110,6 +124,11 @@ public class NoticeServiceImpl implements NoticeService {
      */
     @Override
     @Transactional
+    @Cacheable( // 캐시먼저 확인
+            value = "latestNotices",
+            key = "#root.methodName + '_' + #pageable.pageNumber + '-' + #pageable.pageSize",
+            condition = "#req.keyword == null && #req.fromDate == null && #req.toDate == null && #pageable.pageNumber == 0"
+    )
     public NoticeListResDTO getNoticeList(NoticeListReqDTO req, Pageable pageable) {
         Page<NoticeListItemDTO> searchedNoticeList = noticeRepository.findAllBySearchCondition(req, pageable);
         return convertToNoticeListDTO(searchedNoticeList);
@@ -145,13 +164,18 @@ public class NoticeServiceImpl implements NoticeService {
         Notice notice = noticeRepository.findWithMemberAndAttachmentsById(noticeId)
                 .orElseThrow(()-> new CustomExceptionHandler(ErrorCode.NOTICE_NOT_FOUND));
 
-        // 조회수 증가
-        noticeRepository.incrementViewCountOnly(noticeId);
-        Notice refreshed = noticeRepository.findWithMemberAndAttachmentsById(noticeId)
-                .orElseThrow(()-> new CustomExceptionHandler(ErrorCode.NOTICE_NOT_FOUND));
+//        // 조회수 증가
+//        noticeRepository.incrementViewCountOnly(noticeId);
+//        Notice refreshed = noticeRepository.findWithMemberAndAttachmentsById(noticeId)
+//                .orElseThrow(()-> new CustomExceptionHandler(ErrorCode.NOTICE_NOT_FOUND));
 
+        // 조회수 증가: redis INCR로 변경!!
+        String redisKey = "notice:view:" + noticeId;
+        //  redis에 키가 없으면 0에서 시작, 있으면 1씩 증가
+        redisTemplate.opsForValue().increment(redisKey, 1L);
+        
         // 응답 DTO로 변환
-        return convertToResDTO(refreshed);
+        return convertToResDTO(notice);
     }
 
     /**
@@ -159,6 +183,11 @@ public class NoticeServiceImpl implements NoticeService {
      */
     @Override
     @Transactional
+    @CacheEvict( // 공지가 수정되면 캐싱해놨던 조회목록 초기화 해야함
+            value = "latestNotices", // 같은 캐시 이름
+            key = "'getNoticeList_0-20'", // 캐시 키 고정
+            beforeInvocation = false // 메서드가 성공한 뒤에 캐시 삭제
+    )
     public NoticeResponseDTO updateNotice(Long userId, Long noticeId, NoticeUpdateReqDTO req) {
         // 작성자 예외처리1 (회원여부)
         Member member = memberRepository.findById(userId)
@@ -238,6 +267,11 @@ public class NoticeServiceImpl implements NoticeService {
     /**
      * 공지 삭제 조회 서비스 (delete)
      */
+    @CacheEvict( // 공지가 삭제되면 캐싱해놨던 조회목록 초기화 해야함
+            value = "latestNotices", // 같은 캐시 이름
+            key = "'getNoticeList_0-20'", // 캐시 키 고정
+            beforeInvocation = false // 메서드가 성공한 뒤에 캐시 삭제
+    )
     public void deleteNotice(Long userId, Long noticeId) {
         // 작성자 예외처리1 (회원여부)
         Member member = memberRepository.findById(userId)

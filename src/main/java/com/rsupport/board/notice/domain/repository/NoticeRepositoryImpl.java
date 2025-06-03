@@ -13,6 +13,8 @@ import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
+import jakarta.persistence.Query;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -23,13 +25,16 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Repository
 public class NoticeRepositoryImpl implements NoticeRepositoryCustom {
     private final JPAQueryFactory queryFactory;
-    @Autowired
+    private final EntityManager em;
+
     public NoticeRepositoryImpl(EntityManager em) {
+        this.em = em;
         this.queryFactory = new JPAQueryFactory(em);
     }
 
@@ -246,5 +251,27 @@ public class NoticeRepositoryImpl implements NoticeRepositoryCustom {
                 .fetchOne();
 
         return Optional.ofNullable(fetchedNotice);
+    }
+
+    /**
+     * noticeId → delta 맵을 돌며, 각 공지의 view_count를 누적 반영
+     */
+    @Override
+    public void batchIncreaseViewCount(Map<Long, Long> viewIncrementCnt) {
+        StringBuilder sb = new StringBuilder("UPDATE notice SET view_count = CASE ");
+        viewIncrementCnt.forEach((id, delta) -> {
+            sb.append("WHEN id = ").append(id)
+              .append(" THEN view_count + ").append(delta).append(" ");
+        });
+        sb.append("ELSE view_count END WHERE id IN (");
+
+        // where id in (~~): id 리스트 만들기
+        sb.append(String.join(",", viewIncrementCnt.keySet().stream()
+            .map(String::valueOf)
+            .toList()));
+        sb.append(")");
+
+        Query caseQuery = em.createNativeQuery(sb.toString());
+        caseQuery.executeUpdate();
     }
 }
