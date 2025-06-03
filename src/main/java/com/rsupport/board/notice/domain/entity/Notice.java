@@ -16,7 +16,21 @@ import java.util.List;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity
-@Table(name = "notice")
+@Table(
+
+        name = "notice",
+        indexes = {
+                // 정렬용: created_at 단일 인덱스(최신 등록일로 정렬)
+                @Index(name = "idx_notice_created_at", columnList = "created_at"),
+                // 범위 검색용: end_at 단일 인덱스(endAt만 들어왔을 때 범위필터용)
+                @Index(name = "idx_notice_end_at", columnList = "end_at"),
+                // 범위 검색용(복합): start_at + end_at (startAt만 혹은 startAt <= x <= endAt 일때)
+                @Index(name = "idx_notice_start_end", columnList = "start_at, end_at"),
+                // 키워드 검색용: title 단일 인덱스(포함관계 검색)
+                // todo: content 까지 하려면.. fulltext사용하거나 elasticSearch 같은걸 도입해야한다... 지금은 서비스단에서 분리만ㄱㄱ
+                @Index(name = "idx_notice_title", columnList = "title")
+        }
+)
 public class Notice extends BaseTimeEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
