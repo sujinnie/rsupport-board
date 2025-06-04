@@ -44,14 +44,23 @@ public class DummyDataLoader implements CommandLineRunner {
     @Override
     @Transactional
     public void run(String... args) throws Exception {
-        // 1) member 테이블에 데이터가 있으면 스킵
+        // 1) 'ID = 1인 테스트 회원'을 무조건 삽입 (존재하면 건너뜀)
+        jdbcTemplate.update(
+                "INSERT INTO member (id, name, email, password, created_at, updated_at) " +
+                        "SELECT 1, '테스트유저', 'testuser@example.com', 'password123', NOW(), NOW() " +
+                        "WHERE NOT EXISTS (SELECT 1 FROM member WHERE id = 1)"
+        );
+
+        // 2) member 테이블에 1외의 데이터가 있으면 스킵
         Integer memberCount = jdbcTemplate.queryForObject("SELECT COUNT(*) FROM member", Integer.class);
-        if (memberCount != null && memberCount > 0) {
-            System.out.println(">>> [DummyDataLoader] 이미 데이터가 존재합니다 (memberCount=" + memberCount + "). 더미 로딩 스킵");
+        if (memberCount != null && memberCount > 1) {
+            System.out.println(
+                    ">>> [DummyDataLoader] 기존에 ID=1외 데이터가 있으므로 더미 로딩 스킵 (memberCount=" + memberCount + ")"
+            );
             return;
         }
 
-        // 2) 샘플 파일 가져오기
+        // 3) 샘플 파일 가져오기
         Resource[] sampleResources = resourceResolver.getResources("classpath:/dummy-files/*");
         if (sampleResources == null || sampleResources.length == 0) {
             System.out.println(">>> [DummyDataLoader] resources/dummy-files 안에 샘플 파일이 없습니다. 첨부파일 로딩은 건너뜁니다.");
@@ -60,7 +69,7 @@ public class DummyDataLoader implements CommandLineRunner {
             System.out.println(">>> [DummyDataLoader] 샘플 파일 " + sampleResources.length + "개 로드 성공!");
         }
 
-        // 3) 유저 더미 insert: 100,000건
+        // 4) 유저 더미 insert: 100,000건
         insertDummyMembers(100_000);
         // 제대로 insert 됐는지 확인..
         List<Long> existingMemberIds = jdbcTemplate.query(
@@ -71,7 +80,7 @@ public class DummyDataLoader implements CommandLineRunner {
             throw new IllegalStateException("회원 데이터가 적재되지 않았습니다.");
         }
 
-        // 4) 공지 더미 insert: 100,000건
+        //5) 공지 더미 insert: 100,000건
         insertDummyNotices(100_000, existingMemberIds);
         // 제대로 insert 됐는지 확인
         List<Long> existingNoticeIds = jdbcTemplate.query(
@@ -82,13 +91,13 @@ public class DummyDataLoader implements CommandLineRunner {
             throw new IllegalStateException("공지 데이터가 적재되지 않았습니다.");
         }
 
-        // 5) 공지당 첨부파일 0~3개 랜덤 생성해서 메타정보 insert
+        // 6) 공지당 첨부파일 0~3개 랜덤 생성해서 메타정보 insert
         if (sampleResources != null && sampleResources.length > 0) {
             insertDummyAttachments(existingNoticeIds, sampleResources);
         }
 
-        // 추가.. 파일 없는 공지 400,000건
-        insertDummyNotices(400_000, existingMemberIds);
+//        // 추가.. 파일 없는 공지 400,000건
+//        insertDummyNotices(400_000, existingMemberIds);
 
         System.out.println(">>> [DummyDataLoader] 더미 데이터 삽입 완료!");
     }
@@ -199,7 +208,7 @@ public class DummyDataLoader implements CommandLineRunner {
                     batchParams
             );
         }
-        System.out.println(">>> [DummyDataLoader] 공지 500,000건 생성 완료!");
+        System.out.println(">>> [DummyDataLoader] 공지 100,000건 생성 완료!");
     }
 
     // 3) attachment 테이블에 공지당 0~3개 랜덤으로 batch insert + 실제파일복사
