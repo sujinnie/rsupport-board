@@ -55,21 +55,40 @@
     <summary>5.1 프로젝트 구조 </summary>
 
 ```
-project-root
-├─ src
-│  ├─ main
-│  │  ├─ java/com/rsupport/...      // 세부 구조는 5.2 패키지 구조 참고
-│  │  └─ resources
-│  │     ├─ application.properties  // app 관련 설정(ds, jpa, 로컬스토리지 경로 등)      
-│  │     └─ dummy-file              // 서버 실행 시 더미데이터 생성을 위한 샘플 파일
-│  │         ├─ sample1.jpg
-│  │         ├─ sample2.png
-│  │         └─ sample_txt.txt
-│  └─ test    // 단위테스트, 통합테스트
-│      └─ ...  
-├─ build.gradle
-├─ docker-compose.yml   // MySQL 설정 등
-└─ README.md            // 설정 방법 및 실행 순서 정리
+rsupport-board(프로젝트 루트)
+├── build.gradle         // 공통 빌드 설정(없으면 비워둠)
+├── settings.gradle      // 멀티모듈 선언 
+├── docker-compose.yml   // MySQL, Redis 등 컨테이너 정의
+├── README.md            // 설정 방법 및 실행 순서 정리
+├── gradle/wraper/
+├── ...
+│
+├── backend              // 백엔드 모듈(Spring Boot 애플리케이션)
+│     ├── build.gradle   // 백엔드 전용 gradle 설정
+│     └── src
+│          ├─ main
+│          ├─ java/com/rsupport/...        // 세부 구조는 5.2 패키지 구조 참고
+│          └─ resources
+│          │     ├─ application.properties // app 관련 설정(ds, jpa, 로컬스토리지 경로 등)      
+│          │     └─ dummy-files            // 서버 실행 시 더미데이터 생성을 위한 샘플 파일
+│          │         ├─ sample1.jpg
+│          │         ├─ sample2.png
+│          │         └─ sample_txt.txt
+│          │
+│          └─ test    // 단위테스트, 통합테스트
+│              └─ ...  
+│
+└── frontend            // 프론트엔드 모듈(React 애플리케이션)
+      ├── package.json
+      └── src
+						├── api                // api 연동 관련
+						│   └── noticeApi.js
+						│
+						├── components/        // 공통 컴포넌트
+						│
+						├── pages/             // 페이지 
+						│           
+						└── index.css
 
 ```
 </details>
@@ -120,7 +139,13 @@ com.rsupport.board
 
 ### 6.2 실행방법
 
-1. MySQL, Redis 서버 실행
+1. 프로젝트 루트 경로에서 실행
+
+    ```bash
+    cd rsupport-board
+    ```
+
+2. MySQL, Redis 실행
 
     ```bash
     # MySQL 8.0 컨테이너가 3306 포트로 실행됩니다.
@@ -128,7 +153,7 @@ com.rsupport.board
     docker-compose up -d
     ```
 
-2. (선택, 권장x) 환경변수 export
+3. (선택) 환경변수 export
 
     ```bash
     # 미지정 시 '프로젝트루트경로/uploads/날짜별' 형태로 폴더가 생성됨
@@ -136,20 +161,47 @@ com.rsupport.board
     export /Users/sujin/spring_project/board-uploads
     ```
 
-3. 서버 실행
+4. 프론트엔드 빌드 파일 생성
 
     ```bash
+    cd frontend/
+    npm install
+    npm run build
+    ```
+
+5. 백엔드 JAR 생성
+
+    ```bash
+    # 프론트+백엔드 정적 소스가 한번에 빌드되어 jar파일이 생성됩니다. 
+    # rsupport-board(프로젝트 루트 에서 실행)
+    cd ..
+    ./gradlew clean :backend:bootJar
+    ```
+
+6. 실행
+
+    ```bash
+    # 8080 포트로 서버가 실행되며 
     # 더미데이터(유저 10만, 공지 50만, 공지당 첨부파일 0~3개 랜덤 배치) 가 자동으로 생성됩니다. 
-    ./gradlew bootRun
+    java -jar backend/build/libs/backend-0.0.1-SNAPSHOT.jar
     ```
 
-4. api 테스트 (스웨거)
+7. 접속
 
     ```bash
-   # 아래 주소로 접속
+    # swagger 접속
     http://localhost:8080/swagger-ui/index.html 
+    
+    # 테스트 편의성을 위한 간단한 프론트 ui 확인..
+    http://localhost:8080/
     ```
-5. 프 화면 구현...
+
+8. (참고)
+    - 로그인 기능은 따로 없어 UI로 테스트 시, userId = 1 인 상태로 가정했습니다.
+    - 따라서 목록조회, 상세조회, 생성 은 바로 테스트 가능하고
+    - 수정 및 삭제는 생성한 게시물에 한해서만 실행가능합니다.
+    - 스웨거에서는 모두 테스트 가능합니다..!
+
 
 
 ## 7. 핵심 문제 해결 전략
