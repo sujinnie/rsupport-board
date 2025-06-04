@@ -60,6 +60,32 @@ dependencies {
     testImplementation 'org.testcontainers:mysql'
 }
 
+tasks.named('processResources') {
+    // processResources 작업 전에 무조건 copyReactBuild를 먼저 실행하도록 설정
+    dependsOn 'copyReactBuild'
+}
+
+def reactBuildDir   = file("$rootDir/frontend/build") // npm run build -> 생성되는 디렉토리
+def targetStaticDir = file("$projectDir/src/main/resources/static")
+
+tasks.register('ensureStaticDir') {
+    doLast {
+        if (!targetStaticDir.exists()) {
+            targetStaticDir.mkdirs()
+        }
+    }
+}
+
+tasks.register('copyReactBuild', Copy) { // 프론트 빌드파일 복사
+    dependsOn 'ensureStaticDir'
+    from(reactBuildDir)
+    into(targetStaticDir)
+}
+
+bootJar {
+    dependsOn 'copyReactBuild'
+}
+
 test {
     useJUnitPlatform()
 
