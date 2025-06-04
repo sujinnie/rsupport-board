@@ -43,36 +43,36 @@ function NoticeDetail({ notice }) {
                 </>
             )}
 
-            {/*{notice.attachments.map(att => {*/}
-            {/*    const isImage = /\.(jpe?g|png|gif|bmp|webp)$/i.test(att.filename);*/}
+            {notice.attachments.map(att => {
+                const isImage = /\.(jpe?g|png|gif|bmp|webp)$/i.test(att.filename);
 
-            {/*    return (*/}
-            {/*        <div key={att.id} style={{ marginBottom: 16 }}>*/}
-            {/*            {isImage ? (*/}
-            {/*                <div style={{ marginBottom: 4 }}>*/}
-            {/*                    <img*/}
-            {/*                        src={att.url}*/}
-            {/*                        alt={att.filename}*/}
-            {/*                        style={{*/}
-            {/*                            maxWidth: '200px',*/}
-            {/*                            maxHeight: '200px',*/}
-            {/*                            objectFit: 'contain',*/}
-            {/*                            border: '1px solid #ccc',*/}
-            {/*                            borderRadius: 4,*/}
-            {/*                        }}*/}
-            {/*                    />*/}
-            {/*                </div>*/}
-            {/*            ) : null}*/}
+                return (
+                    <div key={att.id} style={{ marginBottom: 16 }}>
+                        {isImage ? (
+                            <div style={{ marginBottom: 4 }}>
+                                <img
+                                    src={att.url}
+                                    alt={att.filename}
+                                    style={{
+                                        maxWidth: '200px',
+                                        maxHeight: '200px',
+                                        objectFit: 'contain',
+                                        border: '1px solid #ccc',
+                                        borderRadius: 4,
+                                    }}
+                                />
+                            </div>
+                        ) : null}
 
-            {/*            /!* 파일명 + 다운로드 링크 *!/*/}
-            {/*            <div>*/}
-            {/*                <a href={att.url} target="_blank" rel="noopener noreferrer">*/}
-            {/*                    {att.filename}*/}
-            {/*                </a>*/}
-            {/*            </div>*/}
-            {/*        </div>*/}
-            {/*    );*/}
-            {/*})}*/}
+                        {/* 파일명 + 다운로드 링크 */}
+                        <div>
+                            <a href={att.url} target="_blank" rel="noopener noreferrer">
+                                {att.filename}
+                            </a>
+                        </div>
+                    </div>
+                );
+            })}
         </Paper>
     );
 }
