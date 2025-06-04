@@ -1,3 +1,5 @@
+### 추후 백엔드 코드만 분리할 것을 대비하여 ....
+
 HELP.md
 .gradle
 build/
@@ -37,12 +39,3 @@ out/
 
 ### VS Code ###
 .vscode/
-
-
-### 백엔드 빌드 산출물 ###
-/backend/build/
-/backend/.gradle/
-
-### 프론트엔드 node_modules & 빌드 산출물 ###
-/frontend/node_modules/
-/frontend/build/

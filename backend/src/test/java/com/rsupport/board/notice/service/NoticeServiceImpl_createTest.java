@@ -20,6 +20,8 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
@@ -41,6 +43,9 @@ class NoticeServiceImpl_createTest {
 
     @Mock
     private FileStorageService fileStorageService;
+
+    @Mock private RedisTemplate<String, Long> redisTemplate;
+    @Mock private ValueOperations<String, Long> valueOperations;
 
     // Note: @InjectMocks
     // Mockito가 NoticeServiceImpl 생성자를 찾아서
@@ -81,6 +86,10 @@ class NoticeServiceImpl_createTest {
 
         // 생성한 샘플 유저를 반환하도록 세팅
         when(memberRepository.findById(SAMPLE_USER_ID)).thenReturn(Optional.of(sampleMember));
+
+        // redis npe 에러 방지
+        when(redisTemplate.opsForValue()).thenReturn(valueOperations);
+        when(valueOperations.get(anyString())).thenReturn(0L);  // 조회수 기본값을 리턴
         
         // 서비스 로직이 Notice를 저장한 뒤 id=100L이 붙었다고 세팅
         when(noticeRepository.save(any(Notice.class))).thenAnswer(invocation -> {
@@ -169,6 +178,10 @@ class NoticeServiceImpl_createTest {
             n.setId(200L);
             return n;
         });
+
+        // redis npe 에러 방지
+        when(redisTemplate.opsForValue()).thenReturn(valueOperations);
+        when(valueOperations.get(anyString())).thenReturn(0L);  // 조회수 기본값을 리턴
 
         // when
         NoticeResponseDTO responseDTO = noticeService.createNotice(req);

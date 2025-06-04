@@ -20,6 +20,8 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.web.multipart.MultipartFile;
 
 import static org.assertj.core.api.Assertions.*;
@@ -45,6 +47,8 @@ public class NoticeServiceImpl_updateTest {
 
     @Mock
     FileStorageService fileStorageService;
+    @Mock private RedisTemplate<String, Long> redisTemplate;
+    @Mock private ValueOperations<String, Long> valueOperations;
 
     @InjectMocks
     NoticeServiceImpl noticeService;
@@ -132,6 +136,10 @@ public class NoticeServiceImpl_updateTest {
                     .build();
             return a;
         });
+
+        // redis npe 에러 방지
+        when(redisTemplate.opsForValue()).thenReturn(valueOperations);
+        when(valueOperations.get(anyString())).thenReturn(0L);  // 조회수 기본값을 리턴
 
         // noticeRepository.save(...) 호출 시 파라미터로 들어온 notice 그대로 반환하게 새팅
         when(noticeRepository.save(any(Notice.class))).thenAnswer(invocation -> invocation.getArgument(0));
