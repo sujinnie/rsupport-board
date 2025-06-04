@@ -63,13 +63,6 @@ function NoticeDetail({ notice }) {
                                 />
                             </div>
                         ) : null}
-
-                        {/* 파일명 + 다운로드 링크 */}
-                        <div>
-                            <a href={att.url} target="_blank" rel="noopener noreferrer">
-                                {att.filename}
-                            </a>
-                        </div>
                     </div>
                 );
             })}
